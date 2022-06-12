@@ -1,0 +1,34 @@
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+// TODO: 待刪
+div, th, td {
+  border: 1px solid black;
+}
+
+table, tr {
+  width: 100%;
+}
+
+.left {
+  width: 35%;
+}
+
+.right {
+  width: calc(100% - 35%);
+}
+
+// IPAD mini 768px 寬度以下
+@media screen and (max-width: 750px) {
+  .left {
+    width: unset
+  }
+  .right {
+    display: none
+  }
+}
