@@ -3,6 +3,7 @@
     <nav class="navbar navbar-light my-3 rounded" style="background-color: #e3f2fd;">
       <a class="navbar-brand mr-0" href="#">
         <!-- TODO: ICON -->
+        <i class="bi-alarm"></i>
         <img src="/docs/4.6/assets/brand/bootstrap-solid.svg" width="30" height="30" alt="">
         <span class="navbar-brand mb-0 ml-2 h1 font-weight-bolder">Timezone</span>
       </a>
@@ -14,6 +15,17 @@
     <router-view/>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      
+    }
+  }
+}
+</script>
+
 
 <style lang="scss">
 @import "/src/scss/App.scss";
