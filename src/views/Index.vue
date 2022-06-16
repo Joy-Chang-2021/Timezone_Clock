@@ -1,9 +1,45 @@
 <template>
   <main>
     <table>
-      <tr>
-        <th class="left">搜尋欄</th>
-        <th class="right">日期欄</th>
+      <tr class="table-warning">
+        <th class="left">
+          <div class="input-group my-2 px-3">
+            <div class="input-group-prepend">
+              <button class="btn btn-warning" type="button" id="button-addon1">
+                <i class="fa-solid fa-sort"></i>
+              </button>
+            </div>
+            <input type="text" class="form-control" placeholder="Place or Timezone" aria-label="Example text with button addon" aria-describedby="button-addon1">
+          </div>
+        </th>
+        <th class="right">
+          <button type="button" class="btn btn-warning">
+            <i class="fa-regular fa-calendar fa-xl"></i>
+          </button>
+          <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">-1</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Today</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+            </li>
+          </ul>
+        </th>
       </tr>
     </table>
     <Tables />
@@ -20,3 +56,15 @@ export default {
   }
 }
 </script>
+
+
+<style lang="scss" scoped>
+.nav {
+  transform: translate(4%, 13%);
+  border-bottom: unset;
+  flex-wrap: nowrap;
+  a {
+    color:black;
+  }
+}
+</style>
