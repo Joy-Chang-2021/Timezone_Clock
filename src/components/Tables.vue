@@ -7,6 +7,7 @@
     @start="drag = true"
     @end="drag = false"
   >
+  <!-- TODO: ul / li border 調整 -->
   <transition-group type="transition">
     <li v-for="element in list" :key="element.order"  class="border-bottom d-flex list-height">
       <div class="left position-relative">
@@ -14,7 +15,7 @@
           <i class="fa-solid fa-circle-xmark fa-xs my-2"></i>
           <i class="fa-solid fa-house fa-xs  my-2"></i>
         </div>
-        <div class="row mx-0 text-align-center list-height">
+        <div class="row mx-0 align-items-center list-height">
           <div class="col-2">+1</div>
           <div class="col-6 text-left">
             <h3 class="my-0 text-15">
@@ -29,7 +30,106 @@
           </div>
         </div>
       </div>
-      <div class="right">24小時時間</div>
+      <div class="right">
+        <ul class="d-flex w-100 h-50 text-12">
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+          <li class="w-100 border border-primary d-flex flex-column justify-content-center align-items-center">
+            <p class="my-0 line-normal">24</p>
+            <p class="my-0 line-normal">JUN</p>
+          </li>
+        </ul>
+      </div>
     </li>
   </transition-group>
   </draggable>
@@ -82,14 +182,14 @@ export default {
 .text-12 {
   font-size: 12px;
 }
+.line-normal {
+  line-height: normal;
+}
 .setting {
   transform: translateX(-100%);
   flex-direction: column;
   flex-wrap: nowrap;
   justify-content: center;
-}
-.text-align-center {
-  align-items: center;
 }
 // draggable css
 .ghost {
