@@ -29,7 +29,7 @@ table, tr {
 // IPAD mini 768px 寬度以下
 @media screen and (max-width: 750px) {
   .left {
-    width: unset
+    width: 100%
   }
   .right {
     display: none

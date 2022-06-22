@@ -12,8 +12,8 @@
     <li v-for="element in list" :key="element.order"  class="border-bottom d-flex list-height">
       <div class="left position-relative">
         <div class="setting d-flex position-absolute list-height">
-          <i class="fa-solid fa-circle-xmark fa-xs my-2"></i>
-          <i class="fa-solid fa-house fa-xs  my-2"></i>
+          <i class="fa-solid fa-circle-xmark fa-2xs my-2"></i>
+          <i class="fa-solid fa-house fa-2xs  my-2"></i>
         </div>
         <div class="row mx-0 align-items-center list-height">
           <div class="col-2">+1</div>
@@ -25,7 +25,7 @@
             <p class="my-0 text-black-50 text-12">place place place</p>
           </div>
           <div class="col-4 text-right">
-            <h3 class="my-0 text-black-50 text-15">time time</h3>
+            <h3 class="my-0 text-black-50 text-15">00:00</h3>
             <p class="my-0 text-black-50 text-12">date date</p>
           </div>
         </div>

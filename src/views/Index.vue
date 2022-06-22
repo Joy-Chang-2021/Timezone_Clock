@@ -41,8 +41,12 @@
           </ul>
         </th>
       </tr>
+      <tr>
+        <td colspan="2">
+          <Tables class="table-wrapper"/>
+        </td>
+      </tr>
     </table>
-    <Tables />
   </main>
 </template>
 
@@ -66,5 +70,9 @@ export default {
   a {
     color:black;
   }
+}
+.table-wrapper {
+  overflow-x: auto;
+  white-space: nowrap;
 }
 </style>
