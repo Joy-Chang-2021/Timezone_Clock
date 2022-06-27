@@ -48,6 +48,7 @@
 
 <script>
 import Tables from '@/components/Tables.vue'
+import "../utils/moment"
 
 export default {
   name: 'Index',
