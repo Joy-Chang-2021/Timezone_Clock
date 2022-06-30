@@ -48,12 +48,35 @@
 
 <script>
 import Tables from '@/components/Tables.vue'
-import "../utils/moment"
+import worldTimeAPI from '../utils/worldTimeAPI'
 
 export default {
   name: 'Index',
   components: {
     Tables
+  },
+  data() {
+    return {
+      zones: []
+    }
+  },
+  methods: {
+    async getLocalTime(area) {
+      try {
+        // 先以台北為預設
+        const { data, status } = await worldTimeAPI.LocalTimeAPI(area)
+        if(status != 200) throw new Error()
+        const { timezone, abbreviation, datetime, day_of_week, utc_offset } = data
+        this.zones.push({ timezone, abbreviation, datetime, day_of_week, utc_offset })
+      } catch (error) {
+        console.log('error', error)
+      }
+    }
+  },
+  created() {
+    this.getLocalTime('Asia/Taipei')
+    this.getLocalTime('Asia/Kolkata')
+    this.getLocalTime('Asia/Tokyo')
   }
 }
 </script>

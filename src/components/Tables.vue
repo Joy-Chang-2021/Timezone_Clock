@@ -97,6 +97,7 @@ export default {
   methods: {},
   computed: {
     dragOptions() {
+      // for draggable css effect
       return {
         animation: 200,
         group: "description",

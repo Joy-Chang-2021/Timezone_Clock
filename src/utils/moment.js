@@ -1,8 +1,10 @@
 import moment from "moment"
 import "moment-timezone/builds/moment-timezone-with-data"
 
-var a = moment.tz("2013-11-18 11:55", "Asia/Taipei");
-var b = moment.tz("2013-11-18 11:55", "America/Toronto");
+export const userZone = moment.tz.guess();
+// export const zoneAll = moment.tz.names();
+// const countries = moment.tz.zonesForCountry('US');
 
-console.log(a.format()); // 2013-11-18T11:55:00+08:00
-console.log(b.format()); // 2013-11-18T11:55:00-05:00
+console.log(userZone)
+// console.log(zonelist); // [594], year 1900-2038
+// console.log(countries)
