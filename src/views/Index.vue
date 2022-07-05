@@ -42,7 +42,7 @@
         </th>
       </tr>
     </table>
-    <Tables />
+    <Tables :setZones="setZones"/>
   </main>
 </template>
 
@@ -57,26 +57,22 @@ export default {
   },
   data() {
     return {
-      zones: []
+      setZones: ['Asia/Taipei', 'America/Belem', 'Asia/Tokyo', 'Asia/Tehran', 'Asia/Kathmandu']
     }
   },
   methods: {
-    async getLocalTime(area) {
+    async getAllAreaList() {
       try {
-        // 先以台北為預設
-        const { data, status } = await worldTimeAPI.LocalTimeAPI(area)
-        if(status != 200) throw new Error()
-        const { timezone, abbreviation, datetime, day_of_week, utc_offset } = data
-        this.zones.push({ timezone, abbreviation, datetime, day_of_week, utc_offset })
+        const response = await worldTimeAPI.validAreaList()
+        console.log(response)
       } catch (error) {
-        console.log('error', error)
+        console.log('error')
       }
     }
   },
   created() {
-    this.getLocalTime('Asia/Taipei')
-    this.getLocalTime('Asia/Kolkata')
-    this.getLocalTime('Asia/Tokyo')
+    // TODO: 資料配合於輸入框顯示提示
+    // this.getAllAreaList()
   }
 }
 </script>

@@ -1,10 +1,31 @@
 import moment from "moment"
 import "moment-timezone/builds/moment-timezone-with-data"
 
-export const userZone = moment.tz.guess();
-// export const zoneAll = moment.tz.names();
-// const countries = moment.tz.zonesForCountry('US');
+export const clockFilter = {
+  filters: {
+    wholeDayClock(datetime) {
+      // 24HR
+      return moment.parseZone(datetime).format('HH:mm')
+    },
+    halfDayClock(datetime) {
+      // 12HR AM/PM
+      return moment.parseZone(datetime).format('hh:mm A')
+    },
+  }
+}
 
-console.log(userZone)
-// console.log(zonelist); // [594], year 1900-2038
-// console.log(countries)
+export const dateFillter = {
+  filters: {
+    date(datetime) {
+      return moment.parseZone(datetime).format('ddd MMM DD')
+    }
+  }
+}
+
+export const offSetFilter = {
+  filters: {
+    offSet(number) {
+      return number > 0 ? '+' + number : number
+    }
+  }
+}

@@ -4,15 +4,15 @@
       <draggable
         class="list-group"
         tag="ul"
-        v-model="list"
+        v-model="zonesData"
         v-bind="dragOptions"
         @start="drag = true"
         @end="drag = false"
       >
         <transition-group type="transition">
           <li
-            v-for="element in list"
-            :key="element.order"
+            v-for="zone in zonesData"
+            :key="zone.index"
             class="border-bottom d-flex list-height position-relative"
           >
             <div class="setting d-flex position-absolute list-height">
@@ -20,17 +20,17 @@
               <i class="fa-solid fa-house fa-2xs my-2"></i>
             </div>
             <div class="row mx-0 align-items-center w-100 list-height">
-              <div class="col-2">+1</div>
+              <div class="col-2">{{ zone.raw_offset / 3600 | offSet }}</div>
               <div class="col-6 text-left">
                 <h3 class="my-0 text-15">
-                  <strong>{{ element.name }}</strong>
-                  <span class="text-black-50 text-12 ml-1">XXX</span>
+                  <strong>{{ zone.timezone.split("/")[1] }}</strong>
+                  <span class="text-black-50 text-12 ml-1">{{ zone.abbreviation }}</span>
                 </h3>
-                <p class="my-0 text-black-50 text-12">place place place</p>
+                <p class="my-0 text-black-50 text-12">{{ zone.timezone.split("/")[0] }}</p>
               </div>
               <div class="col-4 text-right">
-                <h3 class="my-0 text-black-50 text-15">00:00</h3>
-                <p class="my-0 text-black-50 text-12">date date</p>
+                <h3 class="my-0 text-black-50 text-15">{{ zone.datetime | wholeDayClock }}</h3>
+                <p class="my-0 text-black-50 text-12">{{ zone.datetime | date }}</p>
               </div>
             </div>
           </li>
@@ -72,29 +72,56 @@
           <p class="my-0 line-normal">JUN</p>
         </li>
       </ul>
+      <!-- <p>{{ '2022-07-04T02:47:21.430195+08:00'| wholeDayClock }}</p>
+      <p>{{ '2022-07-04T00:17:21.430958+05:30'| wholeDayClock }}</p>
+      <p>{{ '2022-07-04T03:47:21.431208+09:00'| wholeDayClock }}</p> -->
     </div>
   </div>
 </template>
 
 <script>
 import draggable from "vuedraggable";
-
-const sample = ["AAA", "BBB", "CCC"];
+import worldTimeAPI from "../utils/worldTimeAPI"
+import { clockFilter, dateFillter, offSetFilter } from "../utils/moment"
 
 export default {
   name: "Tables",
   components: {
     draggable,
   },
+  mixins: [clockFilter, dateFillter, offSetFilter],
+  props: {
+    setZones: {
+      type: Array,
+      require: true,
+    }
+  },
   data() {
     return {
-      list: sample.map((name, index) => {
-        return { name, order: index + 1 };
-      }),
+      zonesData: [],
       drag: false,
     };
   },
-  methods: {},
+  methods: {
+    async getLocalTime(area, index) {
+      try {
+        // 取得 area 時區資料、存入 data
+        const { data, status } = await worldTimeAPI.localTimeAPI(area)
+        if(status != 200) throw new Error()
+        data.index = index
+        this.zonesData.push(data)
+      } catch (error) {
+        console.log('error', error)
+      }
+    },
+    dataFormat(list) {
+      console.log(list)
+      console.log('start mehtods')
+      list.forEach(zone => {
+        this.currentZones.push(zone)
+      });
+    }
+  },
   computed: {
     dragOptions() {
       // for draggable css effect
@@ -106,6 +133,11 @@ export default {
       };
     },
   },
+  created() {
+    this.setZones.forEach((zone, index) => {
+      this.getLocalTime(zone, index)
+    })
+  }
 };
 </script>
 

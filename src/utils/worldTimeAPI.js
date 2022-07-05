@@ -5,7 +5,10 @@ const apiHelper = axios.create({
 })
 
 export default {
-  LocalTimeAPI(area) {
+  validAreaList() {
+    return apiHelper.get()
+  },
+  localTimeAPI(area) {
     return apiHelper.get(area)
   }
 }
