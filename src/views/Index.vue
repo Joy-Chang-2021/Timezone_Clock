@@ -42,7 +42,7 @@
         </th>
       </tr>
     </table>
-    <Tables :setZones="setZones"/>
+    <Tables :setMainZone="mainZone" :setZonesName="zonesName" :setMainZoneData="mainZoneData" :setZonesData="zonesData"/> 
   </main>
 </template>
 
@@ -57,10 +57,25 @@ export default {
   },
   data() {
     return {
-      setZones: ['Asia/Taipei', 'America/Belem', 'Asia/Tokyo', 'Asia/Tehran', 'Asia/Kathmandu']
+      mainZone: "Asia/Taipei",
+      zonesName: ['Asia/Taipei', 'America/Belem', 'Asia/Tokyo', 'Asia/Tehran', 'Asia/Kathmandu'],
+      mainZoneData: {},
+      zonesData: []
     }
   },
   methods: {
+    async getLocalTime(area, index) {
+      try {
+        // 取得 area 時區資料、存入 data
+        const { data, status } = await worldTimeAPI.localTimeAPI(area);
+        if (status != 200) throw new Error();
+        data.index = index;
+        if (data.timezone === this.mainZone) this.mainZoneData = data;
+        this.zonesData.push(data);
+      } catch (error) {
+        console.log("error", error);
+      }
+    },
     async getAllAreaList() {
       try {
         const response = await worldTimeAPI.validAreaList()
@@ -73,6 +88,9 @@ export default {
   created() {
     // TODO: 資料配合於輸入框顯示提示
     // this.getAllAreaList()
+    this.zonesName.forEach((zone, index) => {
+      this.getLocalTime(zone, index);
+    });
   }
 }
 </script>

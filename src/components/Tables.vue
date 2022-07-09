@@ -19,7 +19,7 @@
               <i class="fa-solid fa-circle-xmark fa-2xs my-2"></i>
               <i
                 class="fa-solid fa-house fa-2xs my-2"
-                :class="{ 'd-none': zone.timezone === mainLocation }"
+                :class="{ 'd-none': zone.timezone === mainZone }"
               ></i>
             </div>
             <div class="row mx-0 align-items-center w-100 list-height">
@@ -119,9 +119,7 @@
 
 <script>
 import draggable from "vuedraggable";
-import worldTimeAPI from "../utils/worldTimeAPI";
 import moment from "moment";
-// import "moment-timezone/builds/moment-timezone-with-data"
 import {
   clockFilter,
   dateFillter,
@@ -136,39 +134,39 @@ export default {
   },
   mixins: [clockFilter, dateFillter, mathFilter, symbolFilter],
   props: {
-    setZones: {
+    setMainZone: {
+      type: String,
+      require: true
+    },
+    setZonesName: {
+      type: Array,
+      require: true
+    },
+    setMainZoneData: {
+      type: Object,
+      require: true
+    },
+    setZonesData: {
       type: Array,
       require: true,
     },
   },
   data() {
     return {
+      zonesName: [],
       zonesData: [],
-      mainLocation: "Asia/Taipei",
+      mainZone: "",
       mainZoneData: {},
       drag: false,
     };
   },
   methods: {
-    async getLocalTime(area, index) {
-      try {
-        // 取得 area 時區資料、存入 data
-        const { data, status } = await worldTimeAPI.localTimeAPI(area);
-        if (status != 200) throw new Error();
-        data.index = index;
-        if (data.timezone === this.mainLocation) this.mainZoneData = data;
-        this.zonesData.push(data);
-      } catch (error) {
-        console.log("error", error);
-      }
-    },
-    dataFormat(list) {
-      console.log(list);
-      console.log("start mehtods");
-      list.forEach((zone) => {
-        this.currentZones.push(zone);
-      });
-    },
+    setPropsData() {
+      this.mainZone = this.setMainZone
+      this.zonesName = this.setZonesName
+      this.mainZoneData = this.setMainZoneData
+      this.zonesData = this.setZonesData
+    }
   },
   computed: {
     localOffSet() {
@@ -211,9 +209,7 @@ export default {
     },
   },
   created() {
-    this.setZones.forEach((zone, index) => {
-      this.getLocalTime(zone, index);
-    });
+    this.setPropsData()
   },
 };
 </script>
