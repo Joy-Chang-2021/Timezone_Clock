@@ -17,20 +17,34 @@
           >
             <div class="setting d-flex position-absolute list-height">
               <i class="fa-solid fa-circle-xmark fa-2xs my-2"></i>
-              <i class="fa-solid fa-house fa-2xs my-2"></i>
+              <i
+                class="fa-solid fa-house fa-2xs my-2"
+                :class="{ 'd-none': zone.timezone === mainLocation }"
+              ></i>
             </div>
             <div class="row mx-0 align-items-center w-100 list-height">
-              <div class="col-2">{{ zone.raw_offset / 3600 | offSet }}</div>
+              <div class="col-2">
+                {{ localOffSet(zone.datetime) | symbol("+") }}
+              </div>
               <div class="col-6 text-left">
                 <h3 class="my-0 text-15">
                   <strong>{{ zone.timezone.split("/")[1] }}</strong>
-                  <span class="text-black-50 text-12 ml-1">{{ zone.abbreviation }}</span>
+                  <span class="text-black-50 text-12 ml-1">{{
+                    zone.abbreviation
+                  }}</span>
                 </h3>
-                <p class="my-0 text-black-50 text-12">{{ zone.timezone.split("/")[0] }}</p>
+                <!-- TODO: change to country name -->
+                <p class="my-0 text-black-50 text-12">
+                  {{ zone.timezone.split("/")[0] }}
+                </p>
               </div>
               <div class="col-4 text-right">
-                <h3 class="my-0 text-black-50 text-15">{{ zone.datetime | wholeDayClock }}</h3>
-                <p class="my-0 text-black-50 text-12">{{ zone.datetime | date }}</p>
+                <h3 class="my-0 text-black-50 text-15">
+                  {{ zone.datetime | wholeDayClock }}
+                </h3>
+                <p class="my-0 text-black-50 text-12">
+                  {{ zone.datetime | dateDetail }}
+                </p>
               </div>
             </div>
           </li>
@@ -38,9 +52,22 @@
       </draggable>
     </div>
     <div class="right flex-column scroll">
-      <ul class="d-flex align-items-center my-0 w-100 list-height text-12 border-bottom">
+      <ul
+        v-for="zone in zonesData"
+        :key="zone.index"
+        class="
+          d-flex
+          align-items-center
+          my-0
+          w-100
+          text-12
+          list-height
+          border-bottom
+        "
+      >
         <li
-          v-for="index in 24" :key="index"
+          v-for="order in 24"
+          :key="order"
           class="
             w-100
             h-50
@@ -51,54 +78,74 @@
             align-items-center
           "
         >
-          <p class="my-0 line-normal">24</p>
-          <p class="my-0 line-normal">JUN</p>
+          <!-- 非整數時差 -->
+          <div v-if="timeLagCompared(zone.datetime) % 1">
+            <!-- 0點 -->
+            <template v-if="firstDayCheck(zone.datetime, order - 1)">
+              <p class="my-0 line-normal position-absolute weekdays-panel">{{ changeDay(zone.datetime) | weeks }}</p>
+              <p class="my-0 line-normal">{{ changeDay(zone.datetime) | month }}</p>
+              <p class="my-0 line-normal">{{ changeDay(zone.datetime)| day }}</p>
+            </template>
+            <!-- 1-23點 -->
+            <template v-else>
+              <p class="my-0 line-normal">
+                {{ parseInt(timeLagCompared(zone.datetime)) + order - 2 | wholeDayPanel}}
+              </p>
+              <p class="my-0 line-normal">
+                {{ zone.datetime | getMinutes | symbol("") }}
+              </p>
+            </template>
+          </div>
+          <!-- 整數時差 -->
+          <div v-else>
+            <!-- 0點 -->
+            <template v-if="firstDayCheck(zone.datetime, order)">
+              <p class="my-0 line-normal position-absolute weekdays-panel">{{ changeDay(zone.datetime) | weeks }}</p>
+              <p class="my-0 line-normal">{{ changeDay(zone.datetime) | month }}</p>
+              <p class="my-0 line-normal">{{ changeDay(zone.datetime)| day }}</p>
+            </template>
+            <!-- 1-23點 -->
+            <template v-else>
+              <p class="my-0 line-normal">
+                {{ parseInt(timeLagCompared(zone.datetime)) + order - 1 | wholeDayPanel}}
+              </p>
+            </template>
+          </div>
         </li>
       </ul>
-      <ul class="d-flex align-items-center my-0 w-100 list-height text-12 border-bottom">
-        <li
-          v-for="index in 24" :key="index"
-          class="
-            w-100
-            h-50
-            border border-primary
-            d-flex
-            flex-column
-            justify-content-center
-            align-items-center
-          "
-        >
-          <p class="my-0 line-normal">24</p>
-          <p class="my-0 line-normal">JUN</p>
-        </li>
-      </ul>
-      <!-- <p>{{ '2022-07-04T02:47:21.430195+08:00'| wholeDayClock }}</p>
-      <p>{{ '2022-07-04T00:17:21.430958+05:30'| wholeDayClock }}</p>
-      <p>{{ '2022-07-04T03:47:21.431208+09:00'| wholeDayClock }}</p> -->
     </div>
   </div>
 </template>
 
 <script>
 import draggable from "vuedraggable";
-import worldTimeAPI from "../utils/worldTimeAPI"
-import { clockFilter, dateFillter, offSetFilter } from "../utils/moment"
+import worldTimeAPI from "../utils/worldTimeAPI";
+import moment from "moment";
+// import "moment-timezone/builds/moment-timezone-with-data"
+import {
+  clockFilter,
+  dateFillter,
+  mathFilter,
+  symbolFilter,
+} from "../utils/moment";
 
 export default {
   name: "Tables",
   components: {
     draggable,
   },
-  mixins: [clockFilter, dateFillter, offSetFilter],
+  mixins: [clockFilter, dateFillter, mathFilter, symbolFilter],
   props: {
     setZones: {
       type: Array,
       require: true,
-    }
+    },
   },
   data() {
     return {
       zonesData: [],
+      mainLocation: "Asia/Taipei",
+      mainZoneData: {},
       drag: false,
     };
   },
@@ -106,23 +153,53 @@ export default {
     async getLocalTime(area, index) {
       try {
         // 取得 area 時區資料、存入 data
-        const { data, status } = await worldTimeAPI.localTimeAPI(area)
-        if(status != 200) throw new Error()
-        data.index = index
-        this.zonesData.push(data)
+        const { data, status } = await worldTimeAPI.localTimeAPI(area);
+        if (status != 200) throw new Error();
+        data.index = index;
+        if (data.timezone === this.mainLocation) this.mainZoneData = data;
+        this.zonesData.push(data);
       } catch (error) {
-        console.log('error', error)
+        console.log("error", error);
       }
     },
     dataFormat(list) {
-      console.log(list)
-      console.log('start mehtods')
-      list.forEach(zone => {
-        this.currentZones.push(zone)
+      console.log(list);
+      console.log("start mehtods");
+      list.forEach((zone) => {
+        this.currentZones.push(zone);
       });
-    }
+    },
   },
   computed: {
+    localOffSet() {
+      return (datetime) => {
+        // 計算當地時間的UTC偏移量(已含日光節約時間), 單位hr
+        return moment.parseZone(datetime).utcOffset() / 60;
+      };
+    },
+    timeLagCompared() {
+      return (datetime) => {
+        // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
+        return this.localOffSet(datetime) -
+          this.localOffSet(this.mainZoneData.datetime)
+      };
+    },
+    firstDayCheck() {
+      return (datetime, order) => {
+        // 辨識0時/24時以顯示月份日期：兩地時差 + 格子序(1-24) - 標準地格子序(1)
+        if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 0) return true
+        else if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 24) return true
+        else return false
+      }
+    },
+    changeDay() {
+      return (datetime) => {
+        // 0點顯示日期，須換日 & 不須換日
+        const timeLag = this.timeLagCompared(datetime)
+        if (timeLag > 0) return moment.parseZone(datetime).add(1, 'days')
+        else return datetime
+      }
+    },
     dragOptions() {
       // for draggable css effect
       return {
@@ -135,9 +212,9 @@ export default {
   },
   created() {
     this.setZones.forEach((zone, index) => {
-      this.getLocalTime(zone, index)
-    })
-  }
+      this.getLocalTime(zone, index);
+    });
+  },
 };
 </script>
 
@@ -159,6 +236,9 @@ export default {
   flex-direction: column;
   flex-wrap: nowrap;
   justify-content: center;
+}
+.weekdays-panel {
+  transform: translate(-20%, -110%);
 }
 .scroll {
   overflow-x: auto;
