@@ -19,11 +19,15 @@ export const clockFilter = {
   }
 }
 
-export const dateFillter = {
+export const dateFilter = {
   filters: {
     dateDetail(datetime) {
       //  顯示: 星期 月份 日期
       return moment.parseZone(datetime).format('ddd MMM DD')
+    },
+    monthAndDay(datetime) {
+      // 顯示: 月份 日期
+      return moment.parseZone(datetime).format('MMM D')
     },
     month(datetime) {
       // 顯示: 月份 Jan - Dec
@@ -32,6 +36,10 @@ export const dateFillter = {
     day(datetime) {
       // 顯示: 日期 1st - 31st
       return moment.parseZone(datetime).format('Do')
+    },
+    dayNumber(datetime) {
+      // 顯示: 日期 1st - 31st
+      return moment.parseZone(datetime).format('D')
     },
     weeks(datetime) {
       // 顯示: 星期 Mon - Sun

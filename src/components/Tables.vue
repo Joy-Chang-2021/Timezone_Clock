@@ -122,7 +122,7 @@ import draggable from "vuedraggable";
 import moment from "moment";
 import {
   clockFilter,
-  dateFillter,
+  dateFilter,
   mathFilter,
   symbolFilter,
 } from "../utils/moment";
@@ -132,7 +132,7 @@ export default {
   components: {
     draggable,
   },
-  mixins: [clockFilter, dateFillter, mathFilter, symbolFilter],
+  mixins: [clockFilter, dateFilter, mathFilter, symbolFilter],
   props: {
     setMainZone: {
       type: String,

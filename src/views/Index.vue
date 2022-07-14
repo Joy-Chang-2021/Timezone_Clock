@@ -9,59 +9,93 @@
                 <i class="fa-solid fa-sort"></i>
               </button>
             </div>
-            <input type="text" class="form-control" placeholder="Place or Timezone" aria-label="Example text with button addon" aria-describedby="button-addon1">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Place or Timezone"
+              aria-label="Example text with button addon"
+              aria-describedby="button-addon1"
+            />
           </div>
         </th>
         <th class="right">
           <button type="button" class="btn btn-warning">
             <i class="fa-regular fa-calendar fa-xl"></i>
           </button>
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">-1</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link active" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Today</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
-            </li>
-            <li class="nav-item" role="presentation">
-              <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">+1</a>
+          <ul class="nav nav-tabs" id="Tabs" role="tablist">
+            <li
+              v-for="index in 7"
+              :key="index"
+              class="nav-item"
+              role="presentation"
+              data-toggle="tooltip"
+              :title="mainZoneData.datetime | dayChange(index - 2) | weeks"
+            >
+              <!-- TODO: different weeks filter due to class:active -->
+              <!-- TODO: button: back to Today -->
+              <a
+                v-if="index === 2"
+                class="nav-link active"
+                :id="'tab-' + index"
+                data-toggle="tab"
+                href="#"
+                role="tab"
+                aria-controls="home"
+                aria-selected="true"
+                >
+                {{ mainZoneData.datetime | dayChange(index - 2) | monthAndDay }}
+              </a>
+              <a
+                v-else
+                class="nav-link"
+                :id="'tab-' + index"
+                data-toggle="tab"
+                href="#"
+                role="tab"
+                aria-controls="home"
+                aria-selected="true"
+                >
+                {{ mainZoneData.datetime | dayChange(index - 2) | dayNumber }}
+              </a>
+              <!-- TODO: aria-controls/tab-content ? -->
             </li>
           </ul>
         </th>
       </tr>
     </table>
-    <Tables :setMainZone="mainZone" :setZonesName="zonesName" :setMainZoneData="mainZoneData" :setZonesData="zonesData"/> 
+    <Tables
+      :setMainZone="mainZone"
+      :setZonesName="zonesName"
+      :setMainZoneData="mainZoneData"
+      :setZonesData="zonesData"
+    />
   </main>
 </template>
 
 <script>
-import Tables from '@/components/Tables.vue'
-import worldTimeAPI from '../utils/worldTimeAPI'
+import Tables from "@/components/Tables.vue";
+import worldTimeAPI from "../utils/worldTimeAPI";
+import { dateFilter } from "../utils/moment";
 
 export default {
-  name: 'Index',
+  name: "Index",
   components: {
-    Tables
+    Tables,
   },
+  mixins: [dateFilter],
   data() {
     return {
       mainZone: "Asia/Taipei",
-      zonesName: ['Asia/Taipei', 'America/Belem', 'Asia/Tokyo', 'Asia/Tehran', 'Asia/Kathmandu'],
+      zonesName: [
+        "Asia/Taipei",
+        "America/Belem",
+        "Asia/Tokyo",
+        "Asia/Tehran",
+        "Asia/Kathmandu",
+      ],
       mainZoneData: {},
-      zonesData: []
-    }
+      zonesData: [],
+    };
   },
   methods: {
     async getLocalTime(area, index) {
@@ -78,21 +112,22 @@ export default {
     },
     async getAllAreaList() {
       try {
-        const response = await worldTimeAPI.validAreaList()
-        console.log(response)
+        const response = await worldTimeAPI.validAreaList();
+        console.log(response);
       } catch (error) {
-        console.log('error')
+        console.log("error");
       }
-    }
+    },
   },
+  computed: {},
   created() {
     // TODO: 資料配合於輸入框顯示提示
     // this.getAllAreaList()
     this.zonesName.forEach((zone, index) => {
       this.getLocalTime(zone, index);
     });
-  }
-}
+  },
+};
 </script>
 
 
@@ -102,7 +137,7 @@ export default {
   border-bottom: unset;
   flex-wrap: nowrap;
   a {
-    color:black;
+    color: black;
   }
 }
 </style>
