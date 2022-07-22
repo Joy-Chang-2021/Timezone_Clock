@@ -19,7 +19,8 @@
           </div>
         </th>
         <th class="right">
-          <button type="button" class="btn btn-warning">
+          <button type="button" class="btn btn-warning calendar-wrapper">
+            <input type="date" id="calendar">
             <i class="fa-regular fa-calendar fa-xl"></i>
           </button>
           <ul class="nav nav-tabs" id="tableTabs">
