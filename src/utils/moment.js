@@ -67,9 +67,10 @@ export const mathFilter = {
 
 export const symbolFilter = {
   filters: {
-    symbol(number, symbol) {
+    symbol(number) {
       // 用參數控制 ± 符號
-      return symbol + Math.abs(number)
+      if (number >= 0) return '+' + Math.abs(number)
+      else return number
     }
   }
 }

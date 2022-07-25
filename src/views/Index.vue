@@ -20,7 +20,7 @@
         </th>
         <th class="right">
           <button type="button" class="btn btn-warning calendar-wrapper">
-            <input type="date" id="calendar">
+            <input type="date" id="calendar" v-model="calendarSelected">
             <i class="fa-regular fa-calendar fa-xl"></i>
           </button>
           <ul class="nav nav-tabs" id="tableTabs">
@@ -68,6 +68,7 @@
       :setZonesName="zonesName"
       :setMainZoneData="mainZoneData"
       :setZonesData="zonesData"
+      :setCalendar="calendarSelected"
     />
   </main>
 </template>
@@ -98,6 +99,7 @@ export default {
       mainZoneData: {},
       zonesData: [],
       tableTabs: [],
+      calendarSelected: ''
     };
   },
   methods: {

@@ -24,25 +24,32 @@
             </div>
             <div class="row mx-0 align-items-center w-100 list-height">
               <div class="col-2">
-                {{ localOffSet(zone.datetime) | symbol("+") }}
+                <!-- 各區標準時差 -->
+                {{ localOffSet(zone.datetime) | symbol }}
               </div>
               <div class="col-6 text-left">
                 <h3 class="my-0 text-15">
-                  <strong>{{ zone.timezone.split("/")[1] }}</strong>
-                  <span class="text-black-50 text-12 ml-1">{{
-                    zone.abbreviation
-                  }}</span>
+                  <strong>
+                    <!-- 地區名 -->
+                    {{ zone.timezone.split("/")[1] }}
+                  </strong>
+                  <span class="text-black-50 text-12 ml-1">
+                    <!-- 時差縮寫 -->
+                    {{ zone.abbreviation }}
+                  </span>
                 </h3>
-                <!-- TODO: change to country name -->
                 <p class="my-0 text-black-50 text-12">
+                  <!-- 國家/ TODO: 城市名 -->
                   {{ zone.timezone.split("/")[0] }}
                 </p>
               </div>
               <div class="col-4 text-right">
                 <h3 class="my-0 text-black-50 text-15">
+                  <!-- 當地時間/ TODO: 所選時間 -->
                   {{ zone.datetime | wholeDayClock }}
                 </h3>
                 <p class="my-0 text-black-50 text-12">
+                  <!-- 當地日期/ TODO: 所選日期 -->
                   {{ zone.datetime | dateDetail }}
                 </p>
               </div>
@@ -92,7 +99,7 @@
                 {{ parseInt(timeLagCompared(zone.datetime)) + order - 2 | wholeDayPanel}}
               </p>
               <p class="my-0 line-normal">
-                {{ zone.datetime | getMinutes | symbol("") }}
+                {{ zone.datetime | getMinutes }}
               </p>
             </template>
           </div>
@@ -120,6 +127,7 @@
 <script>
 import draggable from "vuedraggable";
 import moment from "moment";
+import "moment-timezone/builds/moment-timezone-with-data";
 import {
   clockFilter,
   dateFilter,
@@ -150,6 +158,10 @@ export default {
       type: Array,
       require: true,
     },
+    setCalendar: {
+      type: String,
+      default: ''
+    },
   },
   data() {
     return {
@@ -166,7 +178,22 @@ export default {
       this.zonesName = this.setZonesName
       this.mainZoneData = this.setMainZoneData
       this.zonesData = this.setZonesData
-    }
+    },
+    calendarChanged() {
+      // 監測點擊的日期，修改主要時區資料
+      if (this.setCalendar.length === 0) return
+      const newDate = moment.tz(this.setCalendar, this.mainZone).format()
+      this.zonesData = this.zonesData.map(zone => {
+        if(zone.timezone === this.mainZone) return {
+          ...zone,
+          datetime: newDate
+        }
+        else return {
+          ...zone,
+          datetime: moment(newDate).tz(zone.timezone).format()
+        }
+      })
+    },
   },
   computed: {
     localOffSet() {
@@ -211,6 +238,11 @@ export default {
   created() {
     this.setPropsData()
   },
+  watch: {
+    setCalendar() {
+      this.calendarChanged()
+    }
+  }
 };
 </script>
 
