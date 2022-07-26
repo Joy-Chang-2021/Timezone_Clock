@@ -37,7 +37,7 @@
                 v-show="tab.active"
                 @click.prevent="tabClicked(tab)"
                 :class="['nav-link', 'text-nowrap', { active: tab.active }]"
-                :id="tab.day | dayNumber"
+                :id="tab.day | day"
                 href="#"
               >
                 {{ tab.day | monthAndDay }}
@@ -52,10 +52,10 @@
                 v-show="!tab.active"
                 @click.prevent="tabClicked(tab)"
                 class="nav-link"
-                :id="tab.day | dayNumber"
+                :id="tab.day | day"
                 href="#"
               >
-                {{ tab.day | dayNumber }}
+                {{ tab.day | day }}
               </a>
               <!-- TODO: aria-controls/tab-content ? -->
             </li>

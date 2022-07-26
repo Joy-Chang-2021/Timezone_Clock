@@ -34,11 +34,7 @@ export const dateFilter = {
       return moment.parseZone(datetime).format('MMM')
     },
     day(datetime) {
-      // 顯示: 日期 1st - 31st
-      return moment.parseZone(datetime).format('Do')
-    },
-    dayNumber(datetime) {
-      // 顯示: 日期 1st - 31st
+      // 顯示: 日期 1 - 31
       return moment.parseZone(datetime).format('D')
     },
     weeks(datetime) {

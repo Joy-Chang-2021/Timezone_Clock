@@ -58,68 +58,104 @@
         </transition-group>
       </draggable>
     </div>
-    <div class="right flex-column scroll">
-      <ul
-        v-for="zone in zonesData"
-        :key="zone.index"
-        class="
-          d-flex
-          align-items-center
-          my-0
-          w-100
-          text-12
-          list-height
-          border-bottom
-        "
-      >
-        <li
-          v-for="order in 24"
-          :key="order"
+    <div class="right flex-column scroll position-relative">
+      <div class="position-absolute w-100 h-100 background-wrapper">
+        <ul class="d-flex m-0 h-100" v-if="setCalendar.length === 0">
+          <li
+            v-for="order in 24"
+            :key="order"
+            :class="['w-100', {'bg-success': hourCheck(mainZoneData.datetime, order - 1)}]"
+          >
+          &nbsp;
+          </li>
+        </ul>
+      </div>
+      <div>
+        <ul
+          v-for="zone in zonesData"
+          :key="zone.index"
           class="
-            w-100
-            h-50
-            border border-primary
             d-flex
-            flex-column
-            justify-content-center
             align-items-center
+            position-relative
+            my-0
+            w-100
+            text-12
+            list-height
+            border-bottom
           "
         >
-          <!-- 非整數時差 -->
-          <div v-if="timeLagCompared(zone.datetime) % 1">
-            <!-- 0點 -->
-            <template v-if="firstDayCheck(zone.datetime, order - 1)">
-              <p class="my-0 line-normal position-absolute weekdays-panel">{{ changeDay(zone.datetime) | weeks }}</p>
-              <p class="my-0 line-normal">{{ changeDay(zone.datetime) | month }}</p>
-              <p class="my-0 line-normal">{{ changeDay(zone.datetime)| day }}</p>
-            </template>
-            <!-- 1-23點 -->
-            <template v-else>
-              <p class="my-0 line-normal">
-                {{ parseInt(timeLagCompared(zone.datetime)) + order - 2 | wholeDayPanel}}
-              </p>
-              <p class="my-0 line-normal">
-                {{ zone.datetime | getMinutes }}
-              </p>
-            </template>
-          </div>
-          <!-- 整數時差 -->
-          <div v-else>
-            <!-- 0點 -->
-            <template v-if="firstDayCheck(zone.datetime, order)">
-              <p class="my-0 line-normal position-absolute weekdays-panel">{{ changeDay(zone.datetime) | weeks }}</p>
-              <p class="my-0 line-normal">{{ changeDay(zone.datetime) | month }}</p>
-              <p class="my-0 line-normal">{{ changeDay(zone.datetime)| day }}</p>
-            </template>
-            <!-- 1-23點 -->
-            <template v-else>
-              <p class="my-0 line-normal">
-                {{ parseInt(timeLagCompared(zone.datetime)) + order - 1 | wholeDayPanel}}
-              </p>
-            </template>
-          </div>
-        </li>
-      </ul>
+          <li
+            v-for="order in 24"
+            :key="order"
+            class="
+              w-100
+              h-50
+              d-flex
+              flex-column
+              justify-content-center
+              align-items-center
+            "
+          >
+            <!-- 非整數時差 -->
+            <div v-if="timeLagCompared(zone.datetime) % 1">
+              <!-- 0點 -->
+              <template v-if="firstDayCheck(zone.datetime, order - 1)">
+                <p class="my-0 line-normal position-absolute weekdays-panel">
+                  {{ changeDay(zone.datetime) | weeks }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ changeDay(zone.datetime) | month }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ changeDay(zone.datetime) | day }}
+                </p>
+              </template>
+              <!-- 1-23點 -->
+              <template v-else>
+                <p class="my-0 line-normal">
+                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 2) | wholeDayPanel }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ zone.datetime | getMinutes }}
+                </p>
+              </template>
+            </div>
+            <!-- 整數時差 -->
+            <div v-else>
+              <!-- 0點 -->
+              <template v-if="firstDayCheck(zone.datetime, order)">
+                <p class="my-0 line-normal position-absolute weekdays-panel">
+                  {{ changeDay(zone.datetime) | weeks }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ changeDay(zone.datetime) | month }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ changeDay(zone.datetime) | day }}
+                </p>
+              </template>
+              <!-- 1-23點 -->
+              <template v-else>
+                <p class="my-0 line-normal">
+                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 1) | wholeDayPanel }}
+                </p>
+              </template>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="position-absolute w-100 h-100 hover-wrapper">
+        <ul class="d-flex m-0 h-100">
+          <li
+            v-for="order in 24"
+            :key="order"
+            class="w-100 hour-hover"
+          >
+          &nbsp;
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -144,15 +180,15 @@ export default {
   props: {
     setMainZone: {
       type: String,
-      require: true
+      require: true,
     },
     setZonesName: {
       type: Array,
-      require: true
+      require: true,
     },
     setMainZoneData: {
       type: Object,
-      require: true
+      require: true,
     },
     setZonesData: {
       type: Array,
@@ -160,7 +196,7 @@ export default {
     },
     setCalendar: {
       type: String,
-      default: ''
+      default: "",
     },
   },
   data() {
@@ -174,25 +210,27 @@ export default {
   },
   methods: {
     setPropsData() {
-      this.mainZone = this.setMainZone
-      this.zonesName = this.setZonesName
-      this.mainZoneData = this.setMainZoneData
-      this.zonesData = this.setZonesData
+      this.mainZone = this.setMainZone;
+      this.zonesName = this.setZonesName;
+      this.mainZoneData = this.setMainZoneData;
+      this.zonesData = this.setZonesData;
     },
     calendarChanged() {
       // 監測點擊的日期，修改主要時區資料
-      if (this.setCalendar.length === 0) return
-      const newDate = moment.tz(this.setCalendar, this.mainZone).format()
-      this.zonesData = this.zonesData.map(zone => {
-        if(zone.timezone === this.mainZone) return {
-          ...zone,
-          datetime: newDate
-        }
-        else return {
-          ...zone,
-          datetime: moment(newDate).tz(zone.timezone).format()
-        }
-      })
+      if (this.setCalendar.length === 0) return;
+      const newDate = moment.tz(this.setCalendar, this.mainZone).format();
+      this.zonesData = this.zonesData.map((zone) => {
+        if (zone.timezone === this.mainZone)
+          return {
+            ...zone,
+            datetime: newDate,
+          };
+        else
+          return {
+            ...zone,
+            datetime: moment(newDate).tz(zone.timezone).format(),
+          };
+      });
     },
   },
   computed: {
@@ -205,25 +243,37 @@ export default {
     timeLagCompared() {
       return (datetime) => {
         // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
-        return this.localOffSet(datetime) -
+        return (
+          this.localOffSet(datetime) -
           this.localOffSet(this.mainZoneData.datetime)
+        );
       };
+    },
+    hourCheck() {
+      return (datetime, number) => {
+        // 取 datetime 小時數字，與指定數字相同即回傳 true
+        const hour = moment.parseZone(datetime).hour()
+        if (hour === number) return true
+        else return false
+      }
     },
     firstDayCheck() {
       return (datetime, order) => {
         // 辨識0時/24時以顯示月份日期：兩地時差 + 格子序(1-24) - 標準地格子序(1)
-        if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 0) return true
-        else if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 24) return true
-        else return false
-      }
+        if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 0)
+          return true;
+        else if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 24)
+          return true;
+        else return false;
+      };
     },
     changeDay() {
       return (datetime) => {
         // 0點顯示日期，須換日 & 不須換日
-        const timeLag = this.timeLagCompared(datetime)
-        if (timeLag > 0) return moment.parseZone(datetime).add(1, 'days')
-        else return datetime
-      }
+        const timeLag = this.timeLagCompared(datetime);
+        if (timeLag > 0) return moment.parseZone(datetime).add(1, "days");
+        else return datetime;
+      };
     },
     dragOptions() {
       // for draggable css effect
@@ -236,13 +286,13 @@ export default {
     },
   },
   created() {
-    this.setPropsData()
+    this.setPropsData();
   },
   watch: {
     setCalendar() {
-      this.calendarChanged()
-    }
-  }
+      this.calendarChanged();
+    },
+  },
 };
 </script>
 
@@ -271,6 +321,16 @@ export default {
 .scroll {
   overflow-x: auto;
   white-space: nowrap;
+}
+.background-wrapper {
+  z-index: -50;
+  opacity: 0.1
+}
+.hover-wrapper {
+  z-index: +50;
+  .hour-hover:hover {
+    border: 1px solid black
+  }
 }
 // draggable css
 .ghost {
