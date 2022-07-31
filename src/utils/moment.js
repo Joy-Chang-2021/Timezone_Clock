@@ -50,7 +50,7 @@ export const dateFilter = {
 
 export const mathFilter = {
   filters: {
-    wholeDayPanel(number) {
+    wholeDayFormat(number) {
       // 24時制: 負數需 + 24 校正
       return number < 0 ? number + 24 : number
     },

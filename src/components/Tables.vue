@@ -44,7 +44,11 @@
                 </p>
               </div>
               <div class="col-4 text-right">
-                <h3 class="my-0 text-black-50 text-15">
+                <h3 v-if ="zone.clickClock" class="my-0 text-black-50 text-15">
+                  <!-- 當地時間/ TODO: 所選時間 -->
+                  {{ zone.clickClock }}
+                </h3>
+                <h3 v-else class="my-0 text-black-50 text-15">
                   <!-- 當地時間/ TODO: 所選時間 -->
                   {{ zone.datetime | wholeDayClock }}
                 </h3>
@@ -99,7 +103,7 @@
           >
             <!-- 非整數時差 -->
             <div v-if="timeLagCompared(zone.datetime) % 1">
-              <!-- 0點 -->
+              <!-- 0點/顯示日期 -->
               <template v-if="firstDayCheck(zone.datetime, order - 1)">
                 <p class="my-0 line-normal position-absolute weekdays-panel">
                   {{ changeDay(zone.datetime) | weeks }}
@@ -114,7 +118,7 @@
               <!-- 1-23點 -->
               <template v-else>
                 <p class="my-0 line-normal">
-                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 2) | wholeDayPanel }}
+                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 2) | wholeDayFormat }}
                 </p>
                 <p class="my-0 line-normal">
                   {{ zone.datetime | getMinutes }}
@@ -138,7 +142,7 @@
               <!-- 1-23點 -->
               <template v-else>
                 <p class="my-0 line-normal">
-                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 1) | wholeDayPanel }}
+                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 1) | wholeDayFormat }}
                 </p>
               </template>
             </div>
@@ -148,9 +152,15 @@
       <div class="position-absolute w-100 h-100 hover-wrapper">
         <ul class="d-flex m-0 h-100">
           <li
-            v-for="order in 24"
-            :key="order"
-            class="w-100 hour-hover"
+            v-for="hour in hourClickedPanel"
+            :key="hour.hourIndex"
+            @click.stop="hourClicked(hour)"
+            :class="[
+              'w-100',
+              'hour-hover',
+              {'hour-outside-clicked': hour.panelClicked},
+              {'border border-dark': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
+            ]"
           >
           &nbsp;
           </li>
@@ -205,15 +215,20 @@ export default {
       zonesData: [],
       mainZone: "",
       mainZoneData: {},
+      hourClickedPanel: [],
       drag: false,
     };
   },
   methods: {
-    setPropsData() {
+    fetchPropsData() {
+      // 與API無關之靜態資料
       this.mainZone = this.setMainZone;
       this.zonesName = this.setZonesName;
-      this.mainZoneData = this.setMainZoneData;
-      this.zonesData = this.setZonesData;
+    },
+    timeLagCompared(datetime) {
+        // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
+        return this.localOffSet(datetime) -
+          this.localOffSet(this.mainZoneData.datetime)
     },
     calendarChanged() {
       // 監測點擊的日期，修改主要時區資料
@@ -232,21 +247,78 @@ export default {
           };
       });
     },
+    hourClickDefault() {
+      // 建立hour點擊區資料：編號(1-24)、遮色樣式(panelClicked)、
+      for (let index = 0; index <= 23; index++ ) {
+        this.hourClickedPanel.push({
+          hourIndex: index,
+          panelClicked: false,
+        })
+      }
+    },
+    hourClicked(targetHour) {
+      // 啟動hour點擊區：
+      // 計算指定顯示的日期與時間、格式
+      this.hourClickedData(targetHour)
+      // 修改樣式: 取消所有點擊資料，非指定時間予遮色樣式(panelClicked: true)
+      this.hourClickedPanel.forEach(hour => {
+        hour.panelClicked = false
+        if (hour.hourIndex !== targetHour.hourIndex) hour.panelClicked = true
+      })
+    },
+    hourClickedData(targetHour) {
+      // 計算指定顯示的日期與時間、格式
+      this.zonesData.map(zone => {
+        // 與主要時區的兩地時差
+        const timeLag = this.timeLagCompared(zone.datetime)
+        // 當地時間的「小時」數字
+        const zoneHour = targetHour.hourIndex + timeLag
+        // 當地時間的「分鐘」數字
+        const zoneMinute = (1 - Math.abs(timeLag % 1)) * 60
+        // 區別主要地區時間/當地時間、區別整數時差、非整數時差地區
+        if (zone.timezone === this.mainZoneData.timezone) {
+          zone.clickClock = `${targetHour.hourIndex}:00 - ${targetHour.hourIndex + 1}:00`
+        } else if (timeLag % 1) {
+          console.log('有分鐘數: ')
+          console.log('zoneHour: ', zoneHour, ' ; zoneMinute: ', zoneMinute)
+          if (zoneHour > 0) {
+            // 今日
+            zone.clickClock = `${parseInt(zoneHour)}:${zoneMinute} - ${parseInt(zoneHour) + 1}:${zoneMinute}`
+          } else if (Math.floor(zoneHour) + 25 === 24) {
+            // 前一日 ~ 今日
+            zone.clickClock = `${Math.floor(zoneHour) + 24}:${zoneMinute} - 00:${zoneMinute}`
+          } else {
+            // 前一日
+            zone.clickClock = `${Math.floor(zoneHour) + 24}:${zoneMinute} - ${Math.floor(zoneHour) + 25}:${zoneMinute}`
+          }
+        } else {
+          if (zoneHour < 0) {
+            zone.clickClock = `${zoneHour + 24}:00 - ${zoneHour + 25}:00`
+          } else if (zoneHour >= 24) {
+            zone.clickClock = `${zoneHour - 24}:00 - ${zoneHour - 23}:00`
+          } else {
+            zone.clickClock = `${zoneHour}:00 - ${zoneHour + 1}:00`
+          }
+        }
+      })
+    },
+    hourUnClick() {
+      // 關閉hour點擊區：取消遮色樣式(panelClicked: false)
+      this.hourClickedPanel.forEach(hour => hour.panelClicked = false)
+      this.zonesData = this.zonesData.map(zone => {
+        return zone = {
+          ...zone,
+          clickClock: '',
+          clickDatetime: ''
+        }
+      })
+    }
   },
   computed: {
     localOffSet() {
       return (datetime) => {
         // 計算當地時間的UTC偏移量(已含日光節約時間), 單位hr
         return moment.parseZone(datetime).utcOffset() / 60;
-      };
-    },
-    timeLagCompared() {
-      return (datetime) => {
-        // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
-        return (
-          this.localOffSet(datetime) -
-          this.localOffSet(this.mainZoneData.datetime)
-        );
       };
     },
     hourCheck() {
@@ -286,9 +358,30 @@ export default {
     },
   },
   created() {
-    this.setPropsData();
+    this.fetchPropsData();
+    this.hourClickDefault()
+  },
+  mounted() {
+    document.addEventListener('click', this.hourUnClick);
+  },
+  beforeDestroy() {
+    document.removeEventListener('click', this.hourUnClick);
   },
   watch: {
+    setMainZoneData() {
+      // 由API取得之非同步資料
+      this.mainZoneData = this.setMainZoneData;
+    },
+    setZonesData() {
+      // 由API取得之非同步資料
+      this.zonesData = this.setZonesData.map(zone => {
+        return zone = {
+          ...zone,
+          clickClock: '',
+          clickDatetime: ''
+        }
+      })
+    },
     setCalendar() {
       this.calendarChanged();
     },
@@ -330,6 +423,9 @@ export default {
   z-index: +50;
   .hour-hover:hover {
     border: 1px solid black
+  }
+  .hour-outside-clicked {
+    background-color: rgba(255, 255, 255, 0.8)
   }
 }
 // draggable css

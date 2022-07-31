@@ -95,6 +95,9 @@ export default {
         "Asia/Tokyo",
         "Asia/Tehran",
         "Asia/Kathmandu",
+        "Australia/Adelaide",
+        "Pacific/Niue",
+        "Pacific/Nauru"
       ],
       mainZoneData: {},
       zonesData: [],
@@ -109,14 +112,15 @@ export default {
         const { data, status } = await worldTimeAPI.localTimeAPI(area);
         if (status != 200) throw new Error();
         // 加入編號作為迴圈id使用
-        data.index = index;
+        const { abbreviation, datetime, timezone, dst } = data
+        const zoneData = { abbreviation, datetime, timezone, dst, index }
         // 加入主要時區data、呼叫table tabs資料函式
         if (data.timezone === this.mainZone) {
-          this.mainZoneData = data;
+          this.mainZoneData = zoneData;
           this.fetchTableTabs();
         }
         // 加入所有時區data
-        this.zonesData.push(data);
+        this.zonesData.push(zoneData);
       } catch (error) {
         console.log("error", error);
       }
