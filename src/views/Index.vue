@@ -90,13 +90,13 @@ export default {
     return {
       mainZone: "Asia/Taipei",
       zonesName: [
-        "Asia/Taipei",
+        "Pacific/Niue",
         "America/Belem",
-        "Asia/Tokyo",
         "Asia/Tehran",
         "Asia/Kathmandu",
+        "Asia/Taipei",
+        "Asia/Tokyo",
         "Australia/Adelaide",
-        "Pacific/Niue",
         "Pacific/Nauru"
       ],
       mainZoneData: {},

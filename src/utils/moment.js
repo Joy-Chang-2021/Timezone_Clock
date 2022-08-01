@@ -11,10 +11,6 @@ export const clockFilter = {
     halfDayClock(datetime) {
       // 01:00 - 12:00 AM/PM
       return moment.parseZone(datetime).format('hh:mm A')
-    },
-    getMinutes(datetime) {
-      // 取得非整數時差的「分鐘數」
-      return moment.parseZone(datetime).utcOffset() % 60
     }
   }
 }
@@ -40,23 +36,6 @@ export const dateFilter = {
     weeks(datetime) {
       // 顯示: 星期 Mon - Sun
       return moment.parseZone(datetime).format('ddd')
-    },
-    dayChange(datetime, number) {
-      // 修改日期: 加減天數
-      return moment.parseZone(datetime).add(number, 'days')
-    }
-  }
-}
-
-export const mathFilter = {
-  filters: {
-    wholeDayFormat(number) {
-      // 24時制: 負數需 + 24 校正
-      return number < 0 ? number + 24 : number
-    },
-    mathFloor(number) {
-      // 小數點: 無條件捨去
-      return Math.floor(number)
     }
   }
 }

@@ -66,9 +66,12 @@
       <div class="position-absolute w-100 h-100 background-wrapper">
         <ul class="d-flex m-0 h-100" v-if="setCalendar.length === 0">
           <li
-            v-for="order in 24"
-            :key="order"
-            :class="['w-100', {'bg-success': hourCheck(mainZoneData.datetime, order - 1)}]"
+            v-for="index in 24"
+            :key="index"
+            :class="[
+              'w-100',
+              {'bg-success': getHour(mainZoneData.datetime) === index - 1}
+            ]"
           >
           &nbsp;
           </li>
@@ -76,8 +79,8 @@
       </div>
       <div>
         <ul
-          v-for="zone in zonesData"
-          :key="zone.index"
+          v-for="zone in hoursPanel"
+          :key="zone.timezone"
           class="
             d-flex
             align-items-center
@@ -90,8 +93,8 @@
           "
         >
           <li
-            v-for="order in 24"
-            :key="order"
+            v-for="index in 24"
+            :key="index"
             class="
               w-100
               h-50
@@ -101,48 +104,39 @@
               align-items-center
             "
           >
-            <!-- 非整數時差 -->
-            <div v-if="timeLagCompared(zone.datetime) % 1">
-              <!-- 0點/顯示日期 -->
-              <template v-if="firstDayCheck(zone.datetime, order - 1)">
+            <div>
+              <!-- 00點: 顯示日期 -->
+              <template v-if="getHour(zone.beginPoint) + index - 1 === 0">
                 <p class="my-0 line-normal position-absolute weekdays-panel">
-                  {{ changeDay(zone.datetime) | weeks }}
+                  {{ zone.beginPoint | weeks }}
                 </p>
                 <p class="my-0 line-normal">
-                  {{ changeDay(zone.datetime) | month }}
+                  {{ zone.beginPoint | month }}
                 </p>
                 <p class="my-0 line-normal">
-                  {{ changeDay(zone.datetime) | day }}
+                  {{ zone.beginPoint | day }}
                 </p>
               </template>
-              <!-- 1-23點 -->
+              <template v-else-if="getHour(zone.beginPoint) + index - 1 === 24">
+                <p class="my-0 line-normal position-absolute weekdays-panel">
+                  {{ zone.nextDate | weeks }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ zone.nextDate | month }}
+                </p>
+                <p class="my-0 line-normal">
+                  {{ zone.nextDate | day }}
+                </p>
+              </template>
+              <!-- 非00點: 顯示小時 -->
               <template v-else>
                 <p class="my-0 line-normal">
-                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 2) | wholeDayFormat }}
+                  {{ getHour(zone.beginPoint) + index - 1 >= 24 ? 
+                    getHour(zone.beginPoint) + index - 25 : 
+                    getHour(zone.beginPoint) + index - 1 }}
                 </p>
-                <p class="my-0 line-normal">
-                  {{ zone.datetime | getMinutes }}
-                </p>
-              </template>
-            </div>
-            <!-- 整數時差 -->
-            <div v-else>
-              <!-- 0點 -->
-              <template v-if="firstDayCheck(zone.datetime, order)">
-                <p class="my-0 line-normal position-absolute weekdays-panel">
-                  {{ changeDay(zone.datetime) | weeks }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ changeDay(zone.datetime) | month }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ changeDay(zone.datetime) | day }}
-                </p>
-              </template>
-              <!-- 1-23點 -->
-              <template v-else>
-                <p class="my-0 line-normal">
-                  {{ (parseInt(timeLagCompared(zone.datetime)) + order - 1) | wholeDayFormat }}
+                <p v-show ="getMinutes(zone.beginPoint) % 60" class="my-0 line-normal">
+                  {{ getMinutes(zone.beginPoint) % 60 }}
                 </p>
               </template>
             </div>
@@ -177,7 +171,6 @@ import "moment-timezone/builds/moment-timezone-with-data";
 import {
   clockFilter,
   dateFilter,
-  mathFilter,
   symbolFilter,
 } from "../utils/moment";
 
@@ -186,7 +179,7 @@ export default {
   components: {
     draggable,
   },
-  mixins: [clockFilter, dateFilter, mathFilter, symbolFilter],
+  mixins: [clockFilter, dateFilter, symbolFilter],
   props: {
     setMainZone: {
       type: String,
@@ -215,6 +208,7 @@ export default {
       zonesData: [],
       mainZone: "",
       mainZoneData: {},
+      hoursPanel: [],
       hourClickedPanel: [],
       drag: false,
     };
@@ -224,6 +218,18 @@ export default {
       // 與API無關之靜態資料
       this.mainZone = this.setMainZone;
       this.zonesName = this.setZonesName;
+    },
+    setHourPanel(datetime) {
+      // 計算主時區00:00對應之各時區當地時間
+      const mainZoneDate = moment.parseZone(datetime).format('YYYY-MM-DD')
+      this.hoursPanel = this.zonesName.map(zone => {
+        const beginPoint = moment(mainZoneDate).tz(zone).format()
+        return zone = {
+          timezone: zone,
+          beginPoint: beginPoint,
+          nextDate: moment.parseZone(beginPoint).add(1, 'd').format()
+        }
+      })
     },
     timeLagCompared(datetime) {
         // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
@@ -315,36 +321,22 @@ export default {
     }
   },
   computed: {
+    getHour() {
+      return (datetime) => {
+        // 取時間參數的小時「數字」
+        return moment.parseZone(datetime).hour()
+      }
+    },
+    getMinutes() {
+      return (datetime) => {
+        // 取UTC時區時差的分鐘數
+        return moment.parseZone(datetime).utcOffset()
+      } 
+    },
     localOffSet() {
       return (datetime) => {
         // 計算當地時間的UTC偏移量(已含日光節約時間), 單位hr
         return moment.parseZone(datetime).utcOffset() / 60;
-      };
-    },
-    hourCheck() {
-      return (datetime, number) => {
-        // 取 datetime 小時數字，與指定數字相同即回傳 true
-        const hour = moment.parseZone(datetime).hour()
-        if (hour === number) return true
-        else return false
-      }
-    },
-    firstDayCheck() {
-      return (datetime, order) => {
-        // 辨識0時/24時以顯示月份日期：兩地時差 + 格子序(1-24) - 標準地格子序(1)
-        if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 0)
-          return true;
-        else if (parseInt(this.timeLagCompared(datetime)) + order - 1 === 24)
-          return true;
-        else return false;
-      };
-    },
-    changeDay() {
-      return (datetime) => {
-        // 0點顯示日期，須換日 & 不須換日
-        const timeLag = this.timeLagCompared(datetime);
-        if (timeLag > 0) return moment.parseZone(datetime).add(1, "days");
-        else return datetime;
       };
     },
     dragOptions() {
@@ -371,6 +363,7 @@ export default {
     setMainZoneData() {
       // 由API取得之非同步資料
       this.mainZoneData = this.setMainZoneData;
+      this.setHourPanel(this.mainZoneData.datetime)
     },
     setZonesData() {
       // 由API取得之非同步資料
