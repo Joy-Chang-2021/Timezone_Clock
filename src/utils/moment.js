@@ -40,12 +40,12 @@ export const dateFilter = {
   }
 }
 
-export const symbolFilter = {
+export const stringFilter = {
   filters: {
     symbol(number) {
       // 用參數控制 ± 符號
       if (number >= 0) return '+' + Math.abs(number)
       else return number
-    }
+    },
   }
 }

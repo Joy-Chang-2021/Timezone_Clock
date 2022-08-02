@@ -41,7 +41,7 @@
                 href="#"
               >
                 {{ tab.day | monthAndDay }}
-                <!-- 返回today按鈕: 當日不顯示 -->
+                <!-- 返回today按鈕: TODO: 當日不顯示 -->
                 <i class="fa-solid fa-angles-left"
                   v-show="tab.day !== dayChange(mainZoneData.datetime, 0)"
                   @click.stop="backTodayClicked"
@@ -66,9 +66,8 @@
     <Tables
       :setMainZone="mainZone"
       :setZonesName="zonesName"
-      :setMainZoneData="mainZoneData"
-      :setZonesData="zonesData"
       :setCalendar="calendarSelected"
+      @mainZoneData="fetchMainZoneData"
     />
   </main>
 </template>
@@ -100,31 +99,11 @@ export default {
         "Pacific/Nauru"
       ],
       mainZoneData: {},
-      zonesData: [],
       tableTabs: [],
       calendarSelected: ''
     };
   },
   methods: {
-    async getLocalTime(area, index) {
-      try {
-        // 取得 area 時區資料、存入 data
-        const { data, status } = await worldTimeAPI.localTimeAPI(area);
-        if (status != 200) throw new Error();
-        // 加入編號作為迴圈id使用
-        const { abbreviation, datetime, timezone, dst } = data
-        const zoneData = { abbreviation, datetime, timezone, dst, index }
-        // 加入主要時區data、呼叫table tabs資料函式
-        if (data.timezone === this.mainZone) {
-          this.mainZoneData = zoneData;
-          this.fetchTableTabs();
-        }
-        // 加入所有時區data
-        this.zonesData.push(zoneData);
-      } catch (error) {
-        console.log("error", error);
-      }
-    },
     async getAllAreaList() {
       try {
         const response = await worldTimeAPI.validAreaList();
@@ -137,14 +116,17 @@ export default {
       // 修改日期: 加減天數
       return moment.parseZone(datetime).add(number, "days").format();
     },
-    fetchTableTabs() {
+    fetchMainZoneData(data) {
+      this.mainZoneData = data
+    },
+    fetchTableTabs(datetime) {
       // 迴圈計算取得一週的日期，用於table tabs資料顯示
       // 七天: 前一天(-1)、當天(0)、後五天(1-5)
-      for (let i = 1; i < 8; i++) {
-        const datetime = this.dayChange(this.mainZoneData.datetime, i - 2);
+      for (let i = -1; i <= 5; i++) {
+        const day = this.dayChange(datetime, i);
         // tableTabs每筆資料 active初始狀態: 當天為 true、其餘為false
-        if (i - 2 === 0) this.tableTabs.push({ day: datetime, active: true });
-        else this.tableTabs.push({ day: datetime, active: false });
+        if (i === 0) this.tableTabs.push({ day, active: true });
+        else this.tableTabs.push({ day, active: false });
       }
     },
     tabClicked(tab) {
@@ -153,6 +135,7 @@ export default {
       this.tableTabs.forEach((tab) => (tab.active = false));
       // 點擊目標之標籤active: true
       tab.active = true;
+      // TODO: 更換日期
     },
     toolTipHide(element) {
       // 隱藏指定之 tooltip
@@ -170,15 +153,14 @@ export default {
       this.toolTipHide(tooltipElement)
     }
   },
-  computed: {},
-  created() {
-    // TODO: 資料配合於輸入框顯示提示
-    // this.getAllAreaList()
-    this.zonesName.forEach((zone, index) => {
-      this.getLocalTime(zone, index);
-    });
-    // this.fetchTableTabs()
-  },
+  watch: {
+    mainZoneData(newVal, oldVal) {
+      // 子元素上傳data後，呼叫函式渲染tab資料
+      console.log('newVal ', newVal)
+      console.log('oldVal ', oldVal)
+      this.fetchTableTabs(newVal)
+    }
+  }
 };
 </script>
 

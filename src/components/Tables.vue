@@ -1,18 +1,18 @@
 <template>
-  <div class="d-flex">
+  <div class="d-flex" v-if="!this.isLoading">
     <div class="left">
       <draggable
         class="list-group"
         tag="ul"
-        v-model="zonesData"
+        v-model="zonesPanelData"
         v-bind="dragOptions"
         @start="drag = true"
         @end="drag = false"
       >
         <transition-group type="transition">
           <li
-            v-for="zone in zonesData"
-            :key="zone.index"
+            v-for="zone in zonesPanelData"
+            :key="zone.id"
             class="border-bottom d-flex list-height position-relative"
           >
             <div class="setting d-flex position-absolute list-height">
@@ -25,13 +25,13 @@
             <div class="row mx-0 align-items-center w-100 list-height">
               <div class="col-2">
                 <!-- 各區標準時差 -->
-                {{ localOffSet(zone.datetime) | symbol }}
+                {{ getMinutes(zone.datetime) / 60 | symbol }}
               </div>
               <div class="col-6 text-left">
                 <h3 class="my-0 text-15">
                   <strong>
                     <!-- 地區名 -->
-                    {{ zone.timezone.split("/")[1] }}
+                    {{ zone.city }}
                   </strong>
                   <span class="text-black-50 text-12 ml-1">
                     <!-- 時差縮寫 -->
@@ -40,7 +40,7 @@
                 </h3>
                 <p class="my-0 text-black-50 text-12">
                   <!-- 國家/ TODO: 城市名 -->
-                  {{ zone.timezone.split("/")[0] }}
+                  {{ zone.country }}
                 </p>
               </div>
               <div class="col-4 text-right">
@@ -79,7 +79,7 @@
       </div>
       <div>
         <ul
-          v-for="zone in hoursPanel"
+          v-for="zone in zonesPanelData"
           :key="zone.timezone"
           class="
             d-flex
@@ -165,13 +165,15 @@
 </template>
 
 <script>
+import worldTimeAPI from "../utils/worldTimeAPI";
+import { v4 as uuidv4 } from 'uuid';
 import draggable from "vuedraggable";
 import moment from "moment";
 import "moment-timezone/builds/moment-timezone-with-data";
 import {
   clockFilter,
   dateFilter,
-  symbolFilter,
+  stringFilter,
 } from "../utils/moment";
 
 export default {
@@ -179,21 +181,13 @@ export default {
   components: {
     draggable,
   },
-  mixins: [clockFilter, dateFilter, symbolFilter],
+  mixins: [clockFilter, dateFilter, stringFilter],
   props: {
     setMainZone: {
       type: String,
       require: true,
     },
     setZonesName: {
-      type: Array,
-      require: true,
-    },
-    setMainZoneData: {
-      type: Object,
-      require: true,
-    },
-    setZonesData: {
       type: Array,
       require: true,
     },
@@ -204,32 +198,79 @@ export default {
   },
   data() {
     return {
-      zonesName: [],
-      zonesData: [],
+      isLoading: false,
       mainZone: "",
       mainZoneData: {},
-      hoursPanel: [],
+      zonesName: [],
+      zonesPanelData: [],
       hourClickedPanel: [],
       drag: false,
     };
   },
   methods: {
     fetchPropsData() {
-      // 與API無關之靜態資料
+      // 父層與API無關之靜態資料
       this.mainZone = this.setMainZone;
       this.zonesName = this.setZonesName;
-    },
-    setHourPanel(datetime) {
-      // 計算主時區00:00對應之各時區當地時間
-      const mainZoneDate = moment.parseZone(datetime).format('YYYY-MM-DD')
-      this.hoursPanel = this.zonesName.map(zone => {
-        const beginPoint = moment(mainZoneDate).tz(zone).format()
-        return zone = {
-          timezone: zone,
-          beginPoint: beginPoint,
-          nextDate: moment.parseZone(beginPoint).add(1, 'd').format()
+      for (let i = 0; i < this.zonesName.length; i++) {
+        // 所有時區之靜態資料，分別用於v-for渲染、點擊0-24時間點的面板渲染
+        this.zonesPanelData[i] = {
+          id: uuidv4(),
+          clickClock: '',
+          clickDatetime: ''
         }
-      })
+      }
+    },
+    async getZonesData() {
+      try {
+        this.isLoading = true
+        // 根據zonesName儲存之所有時區名稱，迴圈向API取得所需資料並按順序存入zonesPanelData、mainZoneData
+        for (let i = 0; i < this.zonesName.length; i++) {
+          const zoneName = this.zonesName[i]
+          const { data, status } = await worldTimeAPI.localTimeAPI(zoneName)
+          if (status != 200) throw new Error()
+          const { abbreviation, datetime, timezone, dst } = data
+          this.zonesPanelData[i] = {
+            ...this.zonesPanelData[i],
+            abbreviation, datetime, timezone, dst,
+            city: timezone.split('/')[1],
+            country: timezone.split('/')[0]
+          }
+          if (zoneName === this.mainZone) {
+            this.mainZoneData = {
+              abbreviation, datetime, timezone, dst,
+            }
+            this.setHoursData(this.mainZoneData.datetime)
+            this.emitMainZoneData(this.mainZoneData)
+          }
+        }
+        this.isLoading = false
+      } catch (error) {
+        console.log("error", error);
+      }
+    },
+    emitMainZoneData(data) {
+      this.$emit('mainZoneData', data)
+    },
+    setHoursData(datetime) {
+      // 計算主時區00:00對應之各時區當地時間，用以渲染0-24小時面板時間
+      // 取得指定時間(函式參數)
+      const mainZoneDate = moment.parseZone(datetime).format('YYYY-MM-DD')
+      // 迴圈所有時區資料 (、nextDate:)
+      for (let i = 0; i < this.zonesName.length; i++) {
+        // 取得當地時區名稱
+        const localZone = this.zonesName[i]
+        // 將指定時間轉換為當地時區時間
+        const beginPoint = moment(mainZoneDate).tz(localZone).format()
+        this.zonesPanelData[i] = {
+          // 原資料保留
+          ...this.zonesPanelData[i],
+          // beginPoint: 每個時區的「第一格」時間點
+          beginPoint: beginPoint,
+          // nextDate: 每個時區須換日時的資料，主要須月份/日期/星期資料
+          nextDate: moment.parseZone(beginPoint).add(1, 'd').format()
+        } 
+      }
     },
     timeLagCompared(datetime) {
         // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
@@ -240,7 +281,7 @@ export default {
       // 監測點擊的日期，修改主要時區資料
       if (this.setCalendar.length === 0) return;
       const newDate = moment.tz(this.setCalendar, this.mainZone).format();
-      this.zonesData = this.zonesData.map((zone) => {
+      this.zonesPanelData = this.zonesPanelData.map((zone) => {
         if (zone.timezone === this.mainZone)
           return {
             ...zone,
@@ -253,6 +294,7 @@ export default {
           };
       });
     },
+    // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
       // 建立hour點擊區資料：編號(1-24)、遮色樣式(panelClicked)、
       for (let index = 0; index <= 23; index++ ) {
@@ -274,7 +316,7 @@ export default {
     },
     hourClickedData(targetHour) {
       // 計算指定顯示的日期與時間、格式
-      this.zonesData.map(zone => {
+      this.zonesPanelData.map(zone => {
         // 與主要時區的兩地時差
         const timeLag = this.timeLagCompared(zone.datetime)
         // 當地時間的「小時」數字
@@ -285,8 +327,6 @@ export default {
         if (zone.timezone === this.mainZoneData.timezone) {
           zone.clickClock = `${targetHour.hourIndex}:00 - ${targetHour.hourIndex + 1}:00`
         } else if (timeLag % 1) {
-          console.log('有分鐘數: ')
-          console.log('zoneHour: ', zoneHour, ' ; zoneMinute: ', zoneMinute)
           if (zoneHour > 0) {
             // 今日
             zone.clickClock = `${parseInt(zoneHour)}:${zoneMinute} - ${parseInt(zoneHour) + 1}:${zoneMinute}`
@@ -311,7 +351,7 @@ export default {
     hourUnClick() {
       // 關閉hour點擊區：取消遮色樣式(panelClicked: false)
       this.hourClickedPanel.forEach(hour => hour.panelClicked = false)
-      this.zonesData = this.zonesData.map(zone => {
+      this.zonesPanelData = this.zonesPanelData.map(zone => {
         return zone = {
           ...zone,
           clickClock: '',
@@ -350,8 +390,9 @@ export default {
     },
   },
   created() {
-    this.fetchPropsData();
-    this.hourClickDefault()
+    this.fetchPropsData(); //靜態資料
+    this.getZonesData() //動態資料from API
+    this.hourClickDefault() 
   },
   mounted() {
     document.addEventListener('click', this.hourUnClick);
@@ -360,21 +401,6 @@ export default {
     document.removeEventListener('click', this.hourUnClick);
   },
   watch: {
-    setMainZoneData() {
-      // 由API取得之非同步資料
-      this.mainZoneData = this.setMainZoneData;
-      this.setHourPanel(this.mainZoneData.datetime)
-    },
-    setZonesData() {
-      // 由API取得之非同步資料
-      this.zonesData = this.setZonesData.map(zone => {
-        return zone = {
-          ...zone,
-          clickClock: '',
-          clickDatetime: ''
-        }
-      })
-    },
     setCalendar() {
       this.calendarChanged();
     },
