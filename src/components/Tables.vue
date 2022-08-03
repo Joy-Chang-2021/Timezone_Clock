@@ -25,9 +25,9 @@
             <div class="row mx-0 align-items-center w-100 list-height">
               <div class="col-2">
                 <!-- 各區標準時差 -->
-                {{ getMinutes(zone.datetime) / 60 | symbol }}
+                {{ getOffset(zone.datetime) / 60 | symbol }}
               </div>
-              <div class="col-6 text-left">
+              <div class="col-4 text-left">
                 <h3 class="my-0 text-15">
                   <strong>
                     <!-- 地區名 -->
@@ -43,17 +43,21 @@
                   {{ zone.country }}
                 </p>
               </div>
-              <div class="col-4 text-right">
+              <div class="col-6 text-right">
                 <h3 v-if ="zone.clickClock" class="my-0 text-black-50 text-15">
-                  <!-- 當地時間/ TODO: 所選時間 -->
+                  <!-- 當點擊目標時間時: 顯示所選時間 -->
                   {{ zone.clickClock }}
                 </h3>
                 <h3 v-else class="my-0 text-black-50 text-15">
-                  <!-- 當地時間/ TODO: 所選時間 -->
+                  <!-- default: 當地時間 -->
                   {{ zone.datetime | wholeDayClock }}
                 </h3>
-                <p class="my-0 text-black-50 text-12">
-                  <!-- 當地日期/ TODO: 所選日期 -->
+                <p v-if ="zone.clickDatetime" class="my-0 text-black-50 text-12">
+                  <!-- 當點擊目標時間時: 顯示所選日期 -->
+                  {{ zone.clickDatetime }}
+                </p>
+                <p v-else class="my-0 text-black-50 text-12">
+                  <!-- default: 當地日期 -->
                   {{ zone.datetime | dateDetail }}
                 </p>
               </div>
@@ -135,8 +139,8 @@
                     getHour(zone.beginPoint) + index - 25 : 
                     getHour(zone.beginPoint) + index - 1 }}
                 </p>
-                <p v-show ="getMinutes(zone.beginPoint) % 60" class="my-0 line-normal">
-                  {{ getMinutes(zone.beginPoint) % 60 }}
+                <p v-show ="getOffset(zone.beginPoint) % 60" class="my-0 line-normal">
+                  {{ getOffset(zone.beginPoint) % 60 }}
                 </p>
               </template>
             </div>
@@ -272,11 +276,6 @@ export default {
         } 
       }
     },
-    timeLagCompared(datetime) {
-        // 計算兩地時差: 其他地區的UTC offset - 基準地區UTC offset
-        return this.localOffSet(datetime) -
-          this.localOffSet(this.mainZoneData.datetime)
-    },
     calendarChanged() {
       // 監測點擊的日期，修改主要時區資料
       if (this.setCalendar.length === 0) return;
@@ -296,7 +295,7 @@ export default {
     },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
-      // 建立hour點擊區資料：編號(1-24)、遮色樣式(panelClicked)、
+      // 建立hour點擊區資料：編號(0-23)、遮色狀態(panelClicked)、
       for (let index = 0; index <= 23; index++ ) {
         this.hourClickedPanel.push({
           hourIndex: index,
@@ -306,7 +305,7 @@ export default {
     },
     hourClicked(targetHour) {
       // 啟動hour點擊區：
-      // 計算指定顯示的日期與時間、格式
+      // 呼叫函式: 計算指定顯示的日期與時間、格式
       this.hourClickedData(targetHour)
       // 修改樣式: 取消所有點擊資料，非指定時間予遮色樣式(panelClicked: true)
       this.hourClickedPanel.forEach(hour => {
@@ -315,41 +314,29 @@ export default {
       })
     },
     hourClickedData(targetHour) {
-      // 計算指定顯示的日期與時間、格式
+      // 取出點擊時間之index
+      const index = targetHour.hourIndex
+      // 迴圈計算各時區之點擊時間
       this.zonesPanelData.map(zone => {
-        // 與主要時區的兩地時差
-        const timeLag = this.timeLagCompared(zone.datetime)
-        // 當地時間的「小時」數字
-        const zoneHour = targetHour.hourIndex + timeLag
-        // 當地時間的「分鐘」數字
-        const zoneMinute = (1 - Math.abs(timeLag % 1)) * 60
-        // 區別主要地區時間/當地時間、區別整數時差、非整數時差地區
-        if (zone.timezone === this.mainZoneData.timezone) {
-          zone.clickClock = `${targetHour.hourIndex}:00 - ${targetHour.hourIndex + 1}:00`
-        } else if (timeLag % 1) {
-          if (zoneHour > 0) {
-            // 今日
-            zone.clickClock = `${parseInt(zoneHour)}:${zoneMinute} - ${parseInt(zoneHour) + 1}:${zoneMinute}`
-          } else if (Math.floor(zoneHour) + 25 === 24) {
-            // 前一日 ~ 今日
-            zone.clickClock = `${Math.floor(zoneHour) + 24}:${zoneMinute} - 00:${zoneMinute}`
-          } else {
-            // 前一日
-            zone.clickClock = `${Math.floor(zoneHour) + 24}:${zoneMinute} - ${Math.floor(zoneHour) + 25}:${zoneMinute}`
-          }
-        } else {
-          if (zoneHour < 0) {
-            zone.clickClock = `${zoneHour + 24}:00 - ${zoneHour + 25}:00`
-          } else if (zoneHour >= 24) {
-            zone.clickClock = `${zoneHour - 24}:00 - ${zoneHour - 23}:00`
-          } else {
-            zone.clickClock = `${zoneHour}:00 - ${zoneHour + 1}:00`
-          }
-        }
+        // 計算小時數字
+        const beginHour = moment.parseZone(zone.beginPoint).hour()
+        let localHour = beginHour + index
+        if (localHour >= 24) localHour = localHour - 24
+        else if (localHour < 0) localHour = localHour + 24
+        // 計算分鐘數字
+        const minutes = Math.abs(this.getOffset(zone.datetime) % 60) === 0 ?
+          '00' : Math.abs(this.getOffset(zone.datetime) % 60)
+        // 代入時間資料
+        zone.clickClock = `${localHour}:${minutes} - ${localHour + 1}:${minutes}`
+        // 若遇換日: 代入日期資料
+        const today = moment.parseZone(zone.datetime).format('ddd MMM DD')
+        const nextDay = moment.parseZone(zone.nextDate).format('ddd MMM DD')
+        zone.clickDatetime = '' // 先清空資料，避免連續點擊導致資料未修改
+        if (localHour === 23) zone.clickDatetime = `${today} - ${nextDay}`
       })
     },
     hourUnClick() {
-      // 關閉hour點擊區：取消遮色樣式(panelClicked: false)
+      // 關閉hour點擊區：取消遮色樣式(panelClicked: false)、移除點擊之時間資料
       this.hourClickedPanel.forEach(hour => hour.panelClicked = false)
       this.zonesPanelData = this.zonesPanelData.map(zone => {
         return zone = {
@@ -367,17 +354,11 @@ export default {
         return moment.parseZone(datetime).hour()
       }
     },
-    getMinutes() {
+    getOffset() {
       return (datetime) => {
         // 取UTC時區時差的分鐘數
         return moment.parseZone(datetime).utcOffset()
       } 
-    },
-    localOffSet() {
-      return (datetime) => {
-        // 計算當地時間的UTC偏移量(已含日光節約時間), 單位hr
-        return moment.parseZone(datetime).utcOffset() / 60;
-      };
     },
     dragOptions() {
       // for draggable css effect
