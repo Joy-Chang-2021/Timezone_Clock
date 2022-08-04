@@ -48,13 +48,21 @@
                   <!-- 當點擊目標時間時: 顯示所選時間 -->
                   {{ zone.clickClock }}
                 </h3>
+                <h3 v-else-if="targetDate" class="my-0 text-black-50 text-15">
+                  <!-- 當點擊目標日期時: 顯示主時區目標日期的00:00時間 -->
+                  {{ zone.beginPoint | wholeDayClock }}
+                </h3>
                 <h3 v-else class="my-0 text-black-50 text-15">
                   <!-- default: 當地時間 -->
                   {{ zone.datetime | wholeDayClock }}
                 </h3>
-                <p v-if ="zone.clickDatetime" class="my-0 text-black-50 text-12">
+                <p v-if="zone.clickDatetime" class="my-0 text-black-50 text-12">
                   <!-- 當點擊目標時間時: 顯示所選日期 -->
                   {{ zone.clickDatetime }}
+                </p>
+                <p v-else-if ="targetDate" class="my-0 text-black-50 text-12">
+                  <!-- 當點擊目標日期時: 顯示主時區目標日期 -->
+                  {{ zone.beginPoint | dateDetail }}
                 </p>
                 <p v-else class="my-0 text-black-50 text-12">
                   <!-- default: 當地日期 -->
@@ -68,7 +76,7 @@
     </div>
     <div class="right flex-column scroll position-relative">
       <div class="position-absolute w-100 h-100 background-wrapper">
-        <ul class="d-flex m-0 h-100" v-if="setCalendar.length === 0">
+        <ul class="d-flex m-0 h-100" v-if="targetDate.length === 0">
           <li
             v-for="index in 24"
             :key="index"
@@ -121,6 +129,7 @@
                   {{ zone.beginPoint | day }}
                 </p>
               </template>
+              <!-- 24點: 顯示換日日期 -->
               <template v-else-if="getHour(zone.beginPoint) + index - 1 === 24">
                 <p class="my-0 line-normal position-absolute weekdays-panel">
                   {{ zone.nextDate | weeks }}
@@ -195,7 +204,7 @@ export default {
       type: Array,
       require: true,
     },
-    setCalendar: {
+    setTargetDate: {
       type: String,
       default: "",
     },
@@ -205,6 +214,7 @@ export default {
       isLoading: false,
       mainZone: "",
       mainZoneData: {},
+      targetDate: "",
       zonesName: [],
       zonesPanelData: [],
       hourClickedPanel: [],
@@ -228,7 +238,7 @@ export default {
     async getZonesData() {
       try {
         this.isLoading = true
-        // 根據zonesName儲存之所有時區名稱，迴圈向API取得所需資料並按順序存入zonesPanelData、mainZoneData
+        // 根據zonesName儲存之所有時區名稱，迴圈按順序將api資料存入zonesPanelData、mainZoneData
         for (let i = 0; i < this.zonesName.length; i++) {
           const zoneName = this.zonesName[i]
           const { data, status } = await worldTimeAPI.localTimeAPI(zoneName)
@@ -253,45 +263,34 @@ export default {
         console.log("error", error);
       }
     },
-    emitMainZoneData(data) {
-      this.$emit('mainZoneData', data)
-    },
     setHoursData(datetime) {
-      // 計算主時區00:00對應之各時區當地時間，用以渲染0-24小時面板時間
-      // 取得指定時間(函式參數)
-      const mainZoneDate = moment.parseZone(datetime).format('YYYY-MM-DD')
-      // 迴圈所有時區資料 (、nextDate:)
+      // 根據代入參數(日期時間)，增加各時區資料中的beginPoint、nextDate資料，用以渲染畫面
+      const day = moment.parseZone(datetime).format('YYYY-MM-DD')
+      // const mainZoneDate = moment.parseZone(this.mainZoneData.datetime).format('YYYY-MM-DD')
+      // 迴圈所有時區資料
       for (let i = 0; i < this.zonesName.length; i++) {
         // 取得當地時區名稱
         const localZone = this.zonesName[i]
-        // 將指定時間轉換為當地時區時間
-        const beginPoint = moment(mainZoneDate).tz(localZone).format()
+        // 將指定日期/時間(參數)的主時區00:00轉換為當地時區時間
+        // beginPoint: 計算主時區00:00對應之各時區當地時間，每個時區的「第一格」時間點
+        const beginPoint = moment(day).tz(localZone).format()
+        // nextDate: 每個時區須換日時的資料，主要須月份/日期/星期資料
+        const nextDate = moment.parseZone(beginPoint).add(1, 'd').format()
         this.zonesPanelData[i] = {
           // 原資料保留
           ...this.zonesPanelData[i],
-          // beginPoint: 每個時區的「第一格」時間點
-          beginPoint: beginPoint,
-          // nextDate: 每個時區須換日時的資料，主要須月份/日期/星期資料
-          nextDate: moment.parseZone(beginPoint).add(1, 'd').format()
-        } 
+          // 新增/修改渲染畫面之資料
+          beginPoint,
+          nextDate
+        }
+        // console.log(this.zonesName[i])
+        // console.log('beginPoint: ', beginPoint)
+        // console.log('nextDate: ', nextDate)
       }
     },
-    calendarChanged() {
-      // 監測點擊的日期，修改主要時區資料
-      if (this.setCalendar.length === 0) return;
-      const newDate = moment.tz(this.setCalendar, this.mainZone).format();
-      this.zonesPanelData = this.zonesPanelData.map((zone) => {
-        if (zone.timezone === this.mainZone)
-          return {
-            ...zone,
-            datetime: newDate,
-          };
-        else
-          return {
-            ...zone,
-            datetime: moment(newDate).tz(zone.timezone).format(),
-          };
-      });
+    emitMainZoneData(data) {
+      // 將主時區資料傳至父層元件，用以渲染 1week tab畫面
+      this.$emit('mainZoneData', data)
     },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
@@ -318,21 +317,28 @@ export default {
       const index = targetHour.hourIndex
       // 迴圈計算各時區之點擊時間
       this.zonesPanelData.map(zone => {
-        // 計算小時數字
+        // ==== 計算之資料 ====
+        // 各時區的「第一格」時間點
         const beginHour = moment.parseZone(zone.beginPoint).hour()
+        // 各時區的「被點擊的那一格」時間點
         let localHour = beginHour + index
-        if (localHour >= 24) localHour = localHour - 24
-        else if (localHour < 0) localHour = localHour + 24
+        // 換算(表格左側)預計顯示的開始時間(若localHour負時數或超過24時須進行換算)
+        let indexHour = localHour
+        if (localHour >= 24) indexHour = localHour - 24
+        else if (localHour < 0) indexHour = localHour + 24
         // 計算分鐘數字
         const minutes = Math.abs(this.getOffset(zone.datetime) % 60) === 0 ?
           '00' : Math.abs(this.getOffset(zone.datetime) % 60)
-        // 代入時間資料
-        zone.clickClock = `${localHour}:${minutes} - ${localHour + 1}:${minutes}`
-        // 若遇換日: 代入日期資料
-        const today = moment.parseZone(zone.datetime).format('ddd MMM DD')
+        // 取得當日、隔日資料格式 
+        const beginDay = moment.parseZone(zone.beginPoint).format('ddd MMM DD')
         const nextDay = moment.parseZone(zone.nextDate).format('ddd MMM DD')
+        // ==== 渲染畫面之資料 ====
+        // 代入(表格左側)預計顯示之時間資料
+        zone.clickClock = `${indexHour}:${minutes} - ${indexHour + 1}:${minutes}`
+        // 若「被點擊的那一格」遇換日/已換日: 代入日期資料
         zone.clickDatetime = '' // 先清空資料，避免連續點擊導致資料未修改
-        if (localHour === 23) zone.clickDatetime = `${today} - ${nextDay}`
+        if(localHour === 23) zone.clickDatetime = `${beginDay} - ${nextDay}`
+        else if (localHour >= 24) zone.clickDatetime = `${nextDay}`
       })
     },
     hourUnClick() {
@@ -373,17 +379,24 @@ export default {
   created() {
     this.fetchPropsData(); //靜態資料
     this.getZonesData() //動態資料from API
-    this.hourClickDefault() 
+    this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {
+    // 於整份網頁文件放置監聽器
     document.addEventListener('click', this.hourUnClick);
   },
   beforeDestroy() {
+    // 於vue實例銷毀前、將網頁文件上的監聽器銷毀
     document.removeEventListener('click', this.hourUnClick);
   },
   watch: {
-    setCalendar() {
-      this.calendarChanged();
+    setTargetDate(value) {
+      // 若指定日期與主時區當天日期相同，則將targetDate清空，DOM畫面(表格左側)顯示api原始資料即可
+      if(moment(this.mainZoneData.datetime).isSame(value, 'day')) this.targetDate = ""
+      // 若指定日期與主時區當天日期不相同，代入targetDate資料，DOM判斷資料狀態後渲染畫面
+      else this.targetDate = value
+      // 仍須每次根據目標日期呼叫函式修改beginPoint、nextDate資料(表格右側)
+      this.setHoursData(value)
     },
   },
 };

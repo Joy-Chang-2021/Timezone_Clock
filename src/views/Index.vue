@@ -20,7 +20,7 @@
         </th>
         <th class="right">
           <button type="button" class="btn btn-warning calendar-wrapper">
-            <input type="date" id="calendar" v-model="calendarSelected">
+            <input type="date" id="calendar" v-model="calendarInput">
             <i class="fa-regular fa-calendar fa-xl"></i>
           </button>
           <ul class="nav nav-tabs" id="tableTabs">
@@ -28,32 +28,35 @@
               v-for="tab in tableTabs"
               :key="tab.day | weeks"
               class="nav-item"
-              data-toggle="tooltip"
-              :title="tab.day | weeks"
             >
               <!-- TODO: tooltip text: /today -->
               <!-- tab.active: true 標籤active狀態、顯示月份+日期 -->
               <a
-                v-show="tab.active"
+                v-if="tab.active"
                 @click.prevent="tabClicked(tab)"
-                :class="['nav-link', 'text-nowrap', { active: tab.active }]"
+                :class="['nav-link', 'text-nowrap', {active: tab.active}]"
                 :id="tab.day | day"
                 href="#"
+                data-toggle="tooltip"
+                :title="tab.ofWeek"
               >
                 {{ tab.day | monthAndDay }}
                 <!-- 返回today按鈕: TODO: 當日不顯示 -->
-                <i class="fa-solid fa-angles-left"
-                  v-show="tab.day !== dayChange(mainZoneData.datetime, 0)"
+                <i 
+                  v-if="tab.ofWeek.length === 3"
                   @click.stop="backTodayClicked"
+                  class="fa-solid fa-angles-left"
                 ></i>
               </a>
               <!-- tab.active: false 顯示日期 -->
               <a
-                v-show="!tab.active"
+                v-else
                 @click.prevent="tabClicked(tab)"
                 class="nav-link"
                 :id="tab.day | day"
                 href="#"
+                data-toggle="tooltip"
+                :title="tab.ofWeek"
               >
                 {{ tab.day | day }}
               </a>
@@ -66,7 +69,7 @@
     <Tables
       :setMainZone="mainZone"
       :setZonesName="zonesName"
-      :setCalendar="calendarSelected"
+      :setTargetDate="setTargetDate"
       @mainZoneData="fetchMainZoneData"
     />
   </main>
@@ -100,7 +103,8 @@ export default {
       ],
       mainZoneData: {},
       tableTabs: [],
-      calendarSelected: ''
+      calendarInput: '',
+      setTargetDate: ''
     };
   },
   methods: {
@@ -121,13 +125,20 @@ export default {
     },
     fetchTableTabs(datetime) {
       // 迴圈計算取得一週的日期，用於table tabs資料顯示
-      // 七天: 前一天(-1)、當天(0)、後五天(1-5)
+      // 七天: 前一天(-1)、參數當天(0)、後五天(1-5)
+      const today = this.mainZoneData.datetime
+      const array = []
       for (let i = -1; i <= 5; i++) {
-        const day = this.dayChange(datetime, i);
-        // tableTabs每筆資料 active初始狀態: 當天為 true、其餘為false
-        if (i === 0) this.tableTabs.push({ day, active: true });
-        else this.tableTabs.push({ day, active: false });
+        const day = this.dayChange(datetime, i); //轉換日期
+        const isToday = moment(day).isSame(today, 'day') //辨識是否為今天
+        const ofWeek = moment.parseZone(day).format('ddd') //轉換星期
+        array.push({
+          day,
+          ofWeek: isToday ? `${ofWeek}/Today`: ofWeek,
+          active: i === 0 ? true : false
+        })
       }
+      this.tableTabs = array
     },
     tabClicked(tab) {
       // 控制 tableTabs每筆資料 active狀態 → 聯動樣式切換/渲染文字顯示
@@ -135,30 +146,34 @@ export default {
       this.tableTabs.forEach((tab) => (tab.active = false));
       // 點擊目標之標籤active: true
       tab.active = true;
-      // TODO: 更換日期
+      // 將日期代入setTargetDate資料、傳入子層元件渲染畫面
+      this.setTargetDate = moment.parseZone(tab.day).format('YYYY-MM-DD')
     },
     toolTipHide(element) {
       // 隱藏指定之 tooltip
       $(element).tooltip('hide')
     },
     backTodayClicked() {
-      // TODO: 將data資料跳轉至「今日」: 尚未加入日歷效果
-      const today = this.dayChange(this.mainZoneData.datetime, 0)
-      this.tableTabs.forEach((tab) => {
-        if(today === tab.day) tab.active = true
-        else tab.active = false
-      });
-      // 隱藏被點擊元素之 tooltip (因跳轉時無法取消hover/focus的效果)
-      const tooltipElement = event.target.parentElement.parentElement
-      this.toolTipHide(tooltipElement)
+      // 將data資料跳轉至「今日」
+      this.fetchTableTabs(this.mainZoneData.datetime)
+      this.setTargetDate = this.mainZoneData.datetime
+      // 隱藏被點擊元素之tooltip (因跳轉時無法取消hover/focus的效果)
+      this.toolTipHide(event.target.parentElement)
     }
   },
+  computed: {
+  },
   watch: {
-    mainZoneData(newVal, oldVal) {
+    mainZoneData(newValue, oldValue) {
       // 子元素上傳data後，呼叫函式渲染tab資料
-      console.log('newVal ', newVal)
-      console.log('oldVal ', oldVal)
-      this.fetchTableTabs(newVal)
+      // console.log('new mainZoneData: ', newValue.datetime)
+      // console.log('old mainZoneData: ', oldValue.datetime)
+      if (newValue.datetime !== oldValue.datetime) this.fetchTableTabs(newValue.datetime)
+    },
+    calendarInput(value) {
+      // 當點擊input日期: 傳入setTargetDate資料給子層元件、修改tab資料
+      this.setTargetDate = value
+      this.fetchTableTabs(value)
     }
   }
 };
