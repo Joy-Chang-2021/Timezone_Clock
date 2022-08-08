@@ -26,22 +26,20 @@
           <ul class="nav nav-tabs" id="tableTabs">
             <li
               v-for="tab in tableTabs"
-              :key="tab.day | weeks"
+              :key="tab.id"
               class="nav-item"
+              data-toggle="tooltip"
+              :title="tab.ofWeek"
             >
-              <!-- TODO: tooltip text: /today -->
-              <!-- tab.active: true 標籤active狀態、顯示月份+日期 -->
+              <!-- tab.active: true 顯示月份+日期 -->
               <a
                 v-if="tab.active"
                 @click.prevent="tabClicked(tab)"
                 :class="['nav-link', 'text-nowrap', {active: tab.active}]"
-                :id="tab.day | day"
                 href="#"
-                data-toggle="tooltip"
-                :title="tab.ofWeek"
               >
                 {{ tab.day | monthAndDay }}
-                <!-- 返回today按鈕: TODO: 當日不顯示 -->
+                <!-- 返回today按鈕(當天不顯示) -->
                 <i 
                   v-if="tab.ofWeek.length === 3"
                   @click.stop="backTodayClicked"
@@ -53,20 +51,17 @@
                 v-else
                 @click.prevent="tabClicked(tab)"
                 class="nav-link"
-                :id="tab.day | day"
                 href="#"
-                data-toggle="tooltip"
-                :title="tab.ofWeek"
               >
                 {{ tab.day | day }}
               </a>
-              <!-- TODO: aria-controls/tab-content ? -->
             </li>
           </ul>
         </th>
       </tr>
     </table>
     <Tables
+      :isWholeDayMode="isWholeDayMode"
       :setMainZone="mainZone"
       :setZonesName="zonesName"
       :setTargetDate="setTargetDate"
@@ -77,6 +72,7 @@
 
 <script>
 import $ from 'jquery'
+import { v4 as uuidv4 } from 'uuid';
 import Tables from "@/components/Tables.vue";
 import worldTimeAPI from "../utils/worldTimeAPI";
 import moment from "moment";
@@ -88,6 +84,12 @@ export default {
     Tables,
   },
   mixins: [dateFilter],
+  props: {
+    isWholeDayMode: {
+      type: Boolean,
+      require: true
+    }
+  },
   data() {
     return {
       mainZone: "Asia/Taipei",
@@ -135,7 +137,8 @@ export default {
         array.push({
           day,
           ofWeek: isToday ? `${ofWeek}/Today`: ofWeek,
-          active: i === 0 ? true : false
+          active: i === 0 ? true : false,
+          id: uuidv4()
         })
       }
       this.tableTabs = array
@@ -158,7 +161,7 @@ export default {
       this.fetchTableTabs(this.mainZoneData.datetime)
       this.setTargetDate = this.mainZoneData.datetime
       // 隱藏被點擊元素之tooltip (因跳轉時無法取消hover/focus的效果)
-      this.toolTipHide(event.target.parentElement)
+      this.toolTipHide(event.target.parentElement.parentElement)
     }
   },
   computed: {
@@ -166,8 +169,6 @@ export default {
   watch: {
     mainZoneData(newValue, oldValue) {
       // 子元素上傳data後，呼叫函式渲染tab資料
-      // console.log('new mainZoneData: ', newValue.datetime)
-      // console.log('old mainZoneData: ', oldValue.datetime)
       if (newValue.datetime !== oldValue.datetime) this.fetchTableTabs(newValue.datetime)
     },
     calendarInput(value) {

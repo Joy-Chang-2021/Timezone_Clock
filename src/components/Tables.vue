@@ -50,11 +50,11 @@
                 </h3>
                 <h3 v-else-if="targetDate" class="my-0 text-black-50 text-15">
                   <!-- 當點擊目標日期時: 顯示主時區目標日期的00:00時間 -->
-                  {{ zone.beginPoint | wholeDayClock }}
+                  {{ zone.beginPoint | clockMode(isWholeDayMode) }}
                 </h3>
                 <h3 v-else class="my-0 text-black-50 text-15">
                   <!-- default: 當地時間 -->
-                  {{ zone.datetime | wholeDayClock }}
+                  {{ zone.datetime | clockMode(isWholeDayMode) }}
                 </h3>
                 <p v-if="zone.clickDatetime" class="my-0 text-black-50 text-12">
                   <!-- 當點擊目標時間時: 顯示所選日期 -->
@@ -141,15 +141,25 @@
                   {{ zone.nextDate | day }}
                 </p>
               </template>
-              <!-- 非00點: 顯示小時 -->
-              <template v-else>
+              <!-- 非00點: 顯示24hrs -->
+              <template v-else-if="isWholeDayMode">
                 <p class="my-0 line-normal">
-                  {{ getHour(zone.beginPoint) + index - 1 >= 24 ? 
-                    getHour(zone.beginPoint) + index - 25 : 
-                    getHour(zone.beginPoint) + index - 1 }}
+                  {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(24) }}
                 </p>
                 <p v-show ="getOffset(zone.beginPoint) % 60" class="my-0 line-normal">
                   {{ getOffset(zone.beginPoint) % 60 }}
+                </p>
+              </template>
+              <!-- 非00點: 顯示12am/pm -->
+              <template v-else>
+                <p class="my-0 line-normal">
+                  {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(12) }}
+                  <sub v-show ="getOffset(zone.beginPoint) % 60">
+                    {{ getOffset(zone.beginPoint) % 60 }}
+                  </sub>
+                </p>
+                <p class="my-0 line-normal">
+                  {{ getHour(zone.beginPoint) + index - 1 | hourStatus }}
                 </p>
               </template>
             </div>
@@ -196,6 +206,10 @@ export default {
   },
   mixins: [clockFilter, dateFilter, stringFilter],
   props: {
+    isWholeDayMode: {
+      type: Boolean,
+      require: true
+    },
     setMainZone: {
       type: String,
       require: true,
@@ -283,9 +297,6 @@ export default {
           beginPoint,
           nextDate
         }
-        // console.log(this.zonesName[i])
-        // console.log('beginPoint: ', beginPoint)
-        // console.log('nextDate: ', nextDate)
       }
     },
     emitMainZoneData(data) {
@@ -312,30 +323,32 @@ export default {
         if (hour.hourIndex !== targetHour.hourIndex) hour.panelClicked = true
       })
     },
-    hourClickedData(targetHour) {
+    hourClickedData(target) {
       // 取出點擊時間之index
-      const index = targetHour.hourIndex
+      const index = target.hourIndex
       // 迴圈計算各時區之點擊時間
       this.zonesPanelData.map(zone => {
         // ==== 計算之資料 ====
-        // 各時區的「第一格」時間點
-        const beginHour = moment.parseZone(zone.beginPoint).hour()
         // 各時區的「被點擊的那一格」時間點
-        let localHour = beginHour + index
-        // 換算(表格左側)預計顯示的開始時間(若localHour負時數或超過24時須進行換算)
-        let indexHour = localHour
-        if (localHour >= 24) indexHour = localHour - 24
-        else if (localHour < 0) indexHour = localHour + 24
+        let localHour = moment.parseZone(zone.beginPoint).hour() + index
+        const targetHour = localHour % 24
+        const nextHour = (localHour + 1) % 24
         // 計算分鐘數字
-        const minutes = Math.abs(this.getOffset(zone.datetime) % 60) === 0 ?
-          '00' : Math.abs(this.getOffset(zone.datetime) % 60)
+        const minutes = this.getOffset(zone.datetime) % 60 ?
+          Math.abs(this.getOffset(zone.datetime) % 60) : '00'
         // 取得當日、隔日資料格式 
         const beginDay = moment.parseZone(zone.beginPoint).format('ddd MMM DD')
         const nextDay = moment.parseZone(zone.nextDate).format('ddd MMM DD')
         // ==== 渲染畫面之資料 ====
         // 代入(表格左側)預計顯示之時間資料
-        zone.clickClock = `${indexHour}:${minutes} - ${indexHour + 1}:${minutes}`
-        // 若「被點擊的那一格」遇換日/已換日: 代入日期資料
+        if (this.isWholeDayMode) {
+          zone.clickClock = `${targetHour}:${minutes} - ${nextHour}:${minutes}`
+        } else {
+          const dayOneMode = targetHour < 12 ? 'am' : 'pm'
+          const dayTwoMode = nextHour < 12 ? 'am' : 'pm'
+          zone.clickClock = `${targetHour % 12}:${minutes} ${dayOneMode} - ${nextHour % 12}:${minutes} ${dayTwoMode}`
+        }
+        // 若「被點擊的那一格」遇換日or已換日: 代入日期資料
         zone.clickDatetime = '' // 先清空資料，避免連續點擊導致資料未修改
         if(localHour === 23) zone.clickDatetime = `${beginDay} - ${nextDay}`
         else if (localHour >= 24) zone.clickDatetime = `${nextDay}`

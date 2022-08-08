@@ -4,13 +4,22 @@ import "moment-timezone/builds/moment-timezone-with-data"
 
 export const clockFilter = {
   filters: {
-    wholeDayClock(datetime) {
-      // 01:00 - 24:00
-      return moment.parseZone(datetime).format('HH:mm')
+    // ===左側面板時間顯示===
+    clockMode(datetime, mode) {
+      // 若 isWholeDayMode(mode): true 回傳24時制
+      if (mode) return moment.parseZone(datetime).format('HH:mm')
+      // 若 false 回傳12am/pm時制
+      else return moment.parseZone(datetime).format('hh:mm a')
     },
-    halfDayClock(datetime) {
-      // 01:00 - 12:00 AM/PM
-      return moment.parseZone(datetime).format('hh:mm A')
+    // ===右側面板時間顯示===
+    hourPanelMode(hour, number) {
+      // 24時制: hour % 24
+      // 12am/pm時制: hour % 12
+      return hour % number
+    },
+    hourStatus(hour) {
+      // 12點以後pm
+      return (hour % 24) > 11 ? "pm" : "am"
     }
   }
 }

@@ -6,11 +6,23 @@
         <span class="navbar-brand m-0 h1 font-weight-bolder">Timezone</span>
       </a>
       <div>
-        <button type="button" class="btn btn-outline-info">AM/PM</button>
-        <button type="button" class="btn btn-outline-info ml-2">24HR</button>
+        <button 
+          @click="setTimeMode(false)"
+          type="button"
+          :class="['btn', [isWholeDayMode ? 'btn-outline-info' : 'btn-info']]"
+        >
+          AM/PM
+        </button>
+        <button
+          @click="setTimeMode(true)"
+          type="button"
+          :class="['btn', 'ml-2', [isWholeDayMode ? 'btn-info' : 'btn-outline-info']]"
+        >
+          24HR
+        </button>
       </div>
     </nav>
-    <router-view/>
+    <router-view :isWholeDayMode="isWholeDayMode" />
   </div>
 </template>
 
@@ -18,9 +30,14 @@
 export default {
   data() {
     return {
-      
+      isWholeDayMode: true
     }
-  }
+  },
+  methods: {
+    setTimeMode(boolean) {
+      this.isWholeDayMode = boolean
+    }
+  } 
 }
 </script>
 
