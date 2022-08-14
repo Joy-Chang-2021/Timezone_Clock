@@ -10,12 +10,19 @@
               </button>
             </div>
             <input
-              type="text"
+              type="search"
+              @keyup.enter="searchInputEntered"
+              v-model="searchInput"
+              name="searchInput"
+              list="searchList"
+              placeholder="enter and select a place"
               class="form-control"
-              placeholder="Place or Timezone"
-              aria-label="Example text with button addon"
-              aria-describedby="button-addon1"
             />
+            <datalist id="searchList" v-if="!isLoading">
+              <option v-for="item in fetchDatalist" :key="item.id" :data-value="item.value">
+                {{ item.name }}
+              </option>
+            </datalist>
           </div>
         </th>
         <th class="right">
@@ -63,7 +70,7 @@
     <Tables
       :isWholeDayMode="isWholeDayMode"
       :setMainZone="mainZone"
-      :setZonesName="zonesName"
+      :setZonesName="setZonesName"
       :setTargetDate="setTargetDate"
       @mainZoneData="fetchMainZoneData"
     />
@@ -92,8 +99,9 @@ export default {
   },
   data() {
     return {
+      isLoading: false,
       mainZone: "Asia/Taipei",
-      zonesName: [
+      setZonesName: [
         "Pacific/Niue",
         "America/Belem",
         "Asia/Tehran",
@@ -106,16 +114,26 @@ export default {
       mainZoneData: {},
       tableTabs: [],
       calendarInput: '',
-      setTargetDate: ''
+      setTargetDate: '',
+      searchInput: '',
+      setTargetLocation: '',
+      apiAreaList: ['Africa', 'America', 'Antarctica', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific'],
+      apiLocationList: [],
     };
   },
   methods: {
-    async getAllAreaList() {
+    async getApiLocationList() {
       try {
-        const response = await worldTimeAPI.validAreaList();
-        console.log(response);
+        this.isLoading = true
+        const { data, status } = await worldTimeAPI.validAreaList();
+        if(status !== 200) throw new Error()
+        this.apiLocationList = data.filter(item =>
+          // 保留包含apiAreaList地區的資料
+          this.apiAreaList.includes(item.split('/')[0])
+        )
+        this.isLoading = false
       } catch (error) {
-        console.log("error");
+        console.log("error: ", error);
       }
     },
     dayChange(datetime, number) {
@@ -124,6 +142,23 @@ export default {
     },
     fetchMainZoneData(data) {
       this.mainZoneData = data
+    },
+    searchInputEntered() {
+      // 確認輸入字串為指定之資料(限定fetchDatalist之中)
+      const validation = this.fetchDatalist.find(item =>  item.name === this.searchInput)
+      // 確認輸入地區與現存地區清單有無重複
+      const isRepeat = this.setZonesName.some(zone => zone === validation.value)
+      // 清除input表格顯示
+      this.searchInput = ""
+      // TODO: 輸入字串有誤，待給予錯誤警告
+      if (!validation) {     
+        console.log('alert: wrong input')
+      } else if(isRepeat) {
+        console.log('repeat: area')
+      } else {
+        // 輸入字串資料及格式正確，將api指定之資料格式(value)帶入setZonesName向下傳至子元件
+        this.setZonesName.push(validation.value)
+      }
     },
     fetchTableTabs(datetime) {
       // 迴圈計算取得一週的日期，用於table tabs資料顯示
@@ -165,6 +200,18 @@ export default {
     }
   },
   computed: {
+    fetchDatalist() {
+      return this.apiLocationList.map(item => {
+        return {
+          id: uuidv4(),
+          value: item, // 用於api資料格式
+          name: item.replaceAll('/', ', ').replaceAll('_', ' '), // 用於畫面顯示
+        }
+      })
+    }
+  },
+  created() {
+    this.getApiLocationList()
   },
   watch: {
     mainZoneData(newValue, oldValue) {
