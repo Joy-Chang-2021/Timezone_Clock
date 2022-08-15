@@ -101,7 +101,7 @@ export default {
     return {
       isLoading: false,
       mainZone: "Asia/Taipei",
-      setZonesName: [
+      setZonesName: JSON.parse(localStorage.getItem('saveZonesList')) || [
         "Pacific/Niue",
         "America/Belem",
         "Asia/Tehran",
@@ -146,8 +146,9 @@ export default {
     searchInputEntered() {
       // 確認輸入字串為指定之資料(限定fetchDatalist之中)
       const validation = this.fetchDatalist.find(item =>  item.name === this.searchInput)
-      // 確認輸入地區與現存地區清單有無重複
-      const isRepeat = this.setZonesName.some(zone => zone === validation.value)
+      // 確認輸入地區與現存地區(localStorage或初始資料)清單有無重複
+      const zonesList = JSON.parse(localStorage.getItem('saveZonesList')) || this.setZonesName
+      const isRepeat = zonesList.some(zone => zone === validation.value)
       // 清除input表格顯示
       this.searchInput = ""
       // TODO: 輸入字串有誤，待給予錯誤警告
@@ -156,8 +157,11 @@ export default {
       } else if(isRepeat) {
         console.log('repeat: area')
       } else {
-        // 輸入字串資料及格式正確，將api指定之資料格式(value)帶入setZonesName向下傳至子元件
-        this.setZonesName.push(validation.value)
+        // 輸入字串資料及格式正確，將api指定之資料格式(value)帶入zonesList及setZonesName向下傳至子元件
+        zonesList.push(validation.value)
+        this.setZonesName = zonesList
+        // 將更新後的zonesList儲存至localStorage，使其保存最新的資料
+        localStorage.setItem('saveZonesList', JSON.stringify(zonesList))
       }
     },
     fetchTableTabs(datetime) {

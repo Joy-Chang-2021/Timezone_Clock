@@ -16,7 +16,10 @@
             class="border-bottom d-flex list-height position-relative"
           >
             <div class="setting d-flex position-absolute list-height">
-              <i class="fa-solid fa-circle-xmark fa-2xs my-2"></i>
+              <i class="fa-solid fa-circle-xmark fa-2xs my-2"
+                :class="{ 'd-none': zone.timezone === mainZone }"
+                @click="deleteTargetZone(zone.timezone)"
+              ></i>
               <i
                 class="fa-solid fa-house fa-2xs my-2"
                 :class="{ 'd-none': zone.timezone === mainZone }"
@@ -300,6 +303,13 @@ export default {
       // 將主時區資料傳至父層元件，用以渲染 1week tab畫面
       this.$emit('mainZoneData', data)
     },
+    deleteTargetZone(zoneName) {
+      // 修改子元件中儲存的資料(並不重新向api取得資料)
+      this.zonesName = this.zonesName.filter(zone => zone !== zoneName)
+      this.zonesPanelData = this.zonesPanelData.filter(zone => zone.timezone !== zoneName)
+      // 修改localStorage中儲存的資料(父元件在處理資料時可由localStorage取得最新資料)
+      localStorage.setItem('saveZonesList', JSON.stringify(this.zonesName))
+    },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
       // 建立hour點擊區資料：編號(0-23)、遮色狀態(panelClicked)、
@@ -405,9 +415,12 @@ export default {
     document.removeEventListener('click', this.hourUnClick);
   },
   watch: {
-    setZonesName() {
-      // 當父元素資料改變，重新向api取得所有地區時間資料
-      this.setZonesInitialData() //重新設定靜態資料
+    setZonesName(value) {
+      // 當父元件資料改變，重新向api取得所有地區時間資料
+      // 使子元件的資料與父元件的資料保持一致
+      this.zonesName = value
+      //重新設定靜態資料
+      this.setZonesInitialData()
       // 動態資料from API
       this.zonesName.forEach(zone => {
         this.getZoneData(zone)
