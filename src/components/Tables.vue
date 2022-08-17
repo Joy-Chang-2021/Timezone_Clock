@@ -239,9 +239,9 @@ export default {
     };
   },
   methods: {
-    setZonesInitialData() {
+    setZonesInitialData(nameList) {
       // 父層與API無關之靜態資料
-      this.zonesName.forEach((zone, index) => {
+      nameList.forEach((zone, index) => {
         // 所有時區之靜態資料，分別用於v-for渲染、點擊0-24時間點的面板渲染
         this.zonesPanelData[index] = {
           id: uuidv4(),
@@ -251,32 +251,33 @@ export default {
         }
       })
     },
-    async getZoneData(name) {
+    async getZonesData(nameList) {
       try {
         this.isLoading = true
-        // 使用api取得指定地區資料存入
-        const { data, status } = await worldTimeAPI.localTimeAPI(name)
-        if (status != 200) throw new Error()
-        const { abbreviation, datetime, dst } = data
-        // 於zonesPanelData將符合指定地區名稱之api資料存入
-        this.zonesPanelData = this.zonesPanelData.map(zone => {
-          if (name !== zone.timezone) return zone
-          else return zone = {
-            ...zone,
-            abbreviation, datetime, dst,
-            // TODO: 詳細地區名稱
-            city: name.split('/')[1],
-            country: name.split('/')[0]
+        // 將指定陣列的資料迴圈向api取得指定地區資料
+        for (const name of nameList) {
+          const { data, status } = await worldTimeAPI.localTimeAPI(name)
+          if (status != 200) throw new Error()
+          const { abbreviation, datetime, dst } = data
+          // 將取得資料存入zonesPanelData
+          this.zonesPanelData = this.zonesPanelData.map(zone => {
+            if (name !== zone.timezone) return zone
+            else return zone = {
+              ...zone,
+              abbreviation, datetime, dst,
+              city: name.split('/')[1],
+              country: name.split('/')[0]
+            }
+          })
+          // 若api資料為主時區資料：
+          if (name === this.mainZone) {
+            this.mainZoneData = {
+              abbreviation, datetime, dst, timezone: this.mainZone
+            }
+            // 代入函式：計算個各時區時差資料、上傳至父元件渲染當週tabs
+            this.setHoursPanelData(datetime)
+            this.emitMainZoneData(this.mainZoneData)
           }
-        })
-        // 於mainZoneData將符合主時區名稱之api資料存入
-        if(name === this.mainZone) {
-          this.mainZoneData = {
-            abbreviation, datetime, dst, timezone: this.mainZone
-          }
-          // 呼叫函式: 計算各時區時差及
-          this.setHoursPanelData(this.mainZoneData.datetime)
-          this.emitMainZoneData(this.mainZoneData)
         }
         this.isLoading = false
       } catch (error) {
@@ -305,10 +306,7 @@ export default {
     },
     deleteTargetZone(zoneName) {
       // 修改子元件中儲存的資料(並不重新向api取得資料)
-      this.zonesName = this.zonesName.filter(zone => zone !== zoneName)
       this.zonesPanelData = this.zonesPanelData.filter(zone => zone.timezone !== zoneName)
-      // 修改localStorage中儲存的資料(父元件在處理資料時可由localStorage取得最新資料)
-      localStorage.setItem('saveZonesList', JSON.stringify(this.zonesName))
     },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
@@ -364,12 +362,9 @@ export default {
     hourUnClick() {
       // 關閉hour點擊區：取消遮色樣式(panelClicked: false)、移除點擊之時間資料
       this.hourClickedPanel.forEach(hour => hour.panelClicked = false)
-      this.zonesPanelData = this.zonesPanelData.map(zone => {
-        return zone = {
-          ...zone,
-          clickClock: '',
-          clickDatetime: ''
-        }
+      this.zonesPanelData.forEach(zone => {
+        zone.clickClock = ""
+        zone.clickDatetime =""
       })
     }
   },
@@ -398,12 +393,10 @@ export default {
   },
   created() {
     this.mainZone = this.setMainZone;
-    this.zonesName = this.setZonesName;
-    this.setZonesInitialData(); //設定靜態資料
+    //設定靜態資料
+    this.setZonesInitialData(this.setZonesName); 
     // 動態資料from API
-    this.zonesName.forEach(zone => {
-      this.getZoneData(zone)
-    })
+    this.getZonesData(this.setZonesName)
     this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {
@@ -417,14 +410,20 @@ export default {
   watch: {
     setZonesName(value) {
       // 當父元件資料改變，重新向api取得所有地區時間資料
-      // 使子元件的資料與父元件的資料保持一致
-      this.zonesName = value
-      //重新設定靜態資料
-      this.setZonesInitialData()
+      // 設定靜態資料
+      this.setZonesInitialData(value); 
       // 動態資料from API
-      this.zonesName.forEach(zone => {
-        this.getZoneData(zone)
-      })
+      this.getZonesData(value)
+    },
+    zonesPanelData(value) {
+      // 過濾掉create階段的變化
+      if (this.isLoading) return
+      // 當zonesPanelData資料改變(ex順序拖曳)：存入zonesName並存至localStorage
+      else this.zonesName = value.map(zone => zone.timezone)
+    },
+    zonesName(value) {
+      // 修改localStorage中儲存的資料(父元件在處理資料時可由localStorage取得最新資料)
+      localStorage.setItem('saveZonesList', JSON.stringify(value))
     },
     setTargetDate(value) {
       // 若指定日期與主時區當天日期相同，則將targetDate清空，DOM畫面(表格左側)顯示api原始資料即可
