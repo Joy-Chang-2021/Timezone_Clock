@@ -442,7 +442,7 @@ export default {
       // 若指定日期與主時區當天日期不相同，代入targetDate資料，DOM判斷資料狀態後渲染畫面
       else this.targetDate = value
       // 仍須每次根據目標日期呼叫函式修改beginPoint、nextDate資料(表格右側)
-      this.setHoursData(value)
+      this.setHoursPanelData(value)
     },
   },
 };
