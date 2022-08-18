@@ -213,13 +213,12 @@ export default {
       type: Boolean,
       require: true
     },
-    setMainZone: {
-      type: String,
-      require: true,
-    },
     setZonesName: {
       type: Array,
       require: true,
+    },
+    setOrder: {
+      type: Boolean
     },
     setTargetDate: {
       type: String,
@@ -229,7 +228,7 @@ export default {
   data() {
     return {
       isLoading: false,
-      mainZone: "",
+      mainZone: "Asia/Taipei",
       mainZoneData: {},
       targetDate: "",
       zonesName: [],
@@ -307,6 +306,16 @@ export default {
     deleteTargetZone(zoneName) {
       // 修改子元件中儲存的資料(並不重新向api取得資料)
       this.zonesPanelData = this.zonesPanelData.filter(zone => zone.timezone !== zoneName)
+    },
+    arrangeOrder(boolean) {
+      if (boolean) this.zonesPanelData.sort((a, b) => {
+        // 「升序」排序
+        return this.getOffset(a.datetime) - this.getOffset(b.datetime)
+      })
+      else this.zonesPanelData.sort((a, b) => {
+        // 「降序」排序
+        return this.getOffset(b.datetime) - this.getOffset(a.datetime)
+      })
     },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
@@ -392,7 +401,6 @@ export default {
     },
   },
   created() {
-    this.mainZone = this.setMainZone;
     //設定靜態資料
     this.setZonesInitialData(this.setZonesName); 
     // 動態資料from API
@@ -424,6 +432,9 @@ export default {
     zonesName(value) {
       // 修改localStorage中儲存的資料(父元件在處理資料時可由localStorage取得最新資料)
       localStorage.setItem('saveZonesList', JSON.stringify(value))
+    },
+    setOrder(value) {
+      this.arrangeOrder(value)
     },
     setTargetDate(value) {
       // 若指定日期與主時區當天日期相同，則將targetDate清空，DOM畫面(表格左側)顯示api原始資料即可

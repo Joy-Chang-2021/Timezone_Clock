@@ -5,7 +5,7 @@
         <th class="left">
           <div class="input-group my-2 px-3">
             <div class="input-group-prepend">
-              <button class="btn btn-warning" type="button" id="button-addon1">
+              <button class="btn btn-warning" type="button" @click="changeOrder">
                 <i class="fa-solid fa-sort"></i>
               </button>
             </div>
@@ -69,8 +69,8 @@
     </table>
     <Tables
       :isWholeDayMode="isWholeDayMode"
-      :setMainZone="mainZone"
       :setZonesName="setZonesName"
+      :setOrder="setOrder"
       :setTargetDate="setTargetDate"
       @mainZoneData="fetchMainZoneData"
     />
@@ -100,7 +100,6 @@ export default {
   data() {
     return {
       isLoading: false,
-      mainZone: "Asia/Taipei",
       setZonesName: JSON.parse(localStorage.getItem('saveZonesList')) || [
         "Pacific/Niue",
         "America/Belem",
@@ -113,6 +112,7 @@ export default {
       ],
       mainZoneData: {},
       tableTabs: [],
+      setOrder: false,
       calendarInput: '',
       setTargetDate: '',
       searchInput: '',
@@ -142,6 +142,9 @@ export default {
     },
     fetchMainZoneData(data) {
       this.mainZoneData = data
+    },
+    changeOrder() {
+      this.setOrder = this.setOrder ? false : true
     },
     searchInputEntered() {
       // 確認輸入字串為指定之資料(限定fetchDatalist之中)
