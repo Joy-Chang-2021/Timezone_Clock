@@ -23,6 +23,7 @@
               <i
                 class="fa-solid fa-house fa-2xs my-2"
                 :class="{ 'd-none': zone.timezone === mainZone }"
+                @click="changeMainZone(zone.timezone)"
               ></i>
             </div>
             <div class="row mx-0 align-items-center w-100 list-height">
@@ -228,7 +229,7 @@ export default {
   data() {
     return {
       isLoading: false,
-      mainZone: "Asia/Taipei",
+      mainZone: "",
       mainZoneData: {},
       targetDate: "",
       zonesName: [],
@@ -284,12 +285,13 @@ export default {
       }
     },
     setHoursPanelData(datetime) {
-      // 根據代入參數(指定地區之日期時間)，增加各時區資料中的beginPoint、nextDate資料，用以渲染畫面
-      const day = moment.parseZone(datetime).format('YYYY-MM-DD')
+      // 根據代入參數(指定之日期時間)，增加各時區資料中的beginPoint、nextDate資料，用以渲染畫面
+      const targetDate = moment.parseZone(datetime).format('YYYY-MM-DD')
+      const mainZoneMidnight = moment.tz(targetDate, this.mainZone).format()
       // 迴圈所有時區beginPoint、nextDate資料
       this.zonesPanelData = this.zonesPanelData.map(zone => {
         // 將參數時區00:00轉換為當地時區的「第一格」時間點
-        const beginPoint = moment(day).tz(zone.timezone).format()
+        const beginPoint = moment(mainZoneMidnight).tz(zone.timezone).format()
         // 每個時區須換日時的資料，主要須月份/日期/星期資料
         const nextDate = moment.parseZone(beginPoint).add(1, 'd').format()
         return zone = {
@@ -302,6 +304,10 @@ export default {
     emitMainZoneData(data) {
       // 將主時區資料傳至父層元件，用以渲染 1week tab畫面
       this.$emit('mainZoneData', data)
+    },
+    changeMainZone(zoneName) {
+      this.mainZone = zoneName
+      this.getZonesData(this.setZonesName)
     },
     deleteTargetZone(zoneName) {
       // 修改子元件中儲存的資料(並不重新向api取得資料)
@@ -316,6 +322,13 @@ export default {
         // 「降序」排序
         return this.getOffset(b.datetime) - this.getOffset(a.datetime)
       })
+    },
+    saveToLocalStorage() {
+      const rawData = {
+        mainZone: this.mainZone,
+        zonesName: this.zonesName
+      }
+      localStorage.setItem('timezoneProject', JSON.stringify(rawData))
     },
     // ==== 點擊24HR面板: 樣式+資料渲染 ====
     hourClickDefault() {
@@ -401,8 +414,10 @@ export default {
     },
   },
   created() {
-    //設定靜態資料
-    this.setZonesInitialData(this.setZonesName); 
+    // 設定靜態資料 (1) zonesPanelData相關 (2) mainZone相關
+    this.setZonesInitialData(this.setZonesName);
+    const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
+    this.mainZone = localStorageData ? localStorageData.mainZone : "Asia/Taipei"
     // 動態資料from API
     this.getZonesData(this.setZonesName)
     this.hourClickDefault() //生成24小時面板點擊區
@@ -426,12 +441,11 @@ export default {
     zonesPanelData(value) {
       // 過濾掉create階段的變化
       if (this.isLoading) return
-      // 當zonesPanelData資料改變(ex順序拖曳)：存入zonesName並存至localStorage
-      else this.zonesName = value.map(zone => zone.timezone)
-    },
-    zonesName(value) {
-      // 修改localStorage中儲存的資料(父元件在處理資料時可由localStorage取得最新資料)
-      localStorage.setItem('saveZonesList', JSON.stringify(value))
+      // 當zonesPanelData資料改變(ex順序拖曳)：存入zonesName並呼叫函式將資料存入localStorage
+      else {
+        this.zonesName = value.map(zone => zone.timezone)
+        this.saveToLocalStorage()
+      }
     },
     setOrder(value) {
       this.arrangeOrder(value)

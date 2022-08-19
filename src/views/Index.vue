@@ -100,16 +100,7 @@ export default {
   data() {
     return {
       isLoading: false,
-      setZonesName: JSON.parse(localStorage.getItem('saveZonesList')) || [
-        "Pacific/Niue",
-        "America/Belem",
-        "Asia/Tehran",
-        "Asia/Kathmandu",
-        "Asia/Taipei",
-        "Asia/Tokyo",
-        "Australia/Adelaide",
-        "Pacific/Nauru"
-      ],
+      setZonesName: [],
       mainZoneData: {},
       tableTabs: [],
       setOrder: false,
@@ -150,8 +141,8 @@ export default {
       // 確認輸入字串為指定之資料(限定fetchDatalist之中)
       const validation = this.fetchDatalist.find(item =>  item.name === this.searchInput)
       // 確認輸入地區與現存地區(localStorage或初始資料)清單有無重複
-      const zonesList = JSON.parse(localStorage.getItem('saveZonesList')) || this.setZonesName
-      const isRepeat = zonesList.some(zone => zone === validation.value)
+      const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
+      const isRepeat = localStorageData.zonesName.some(zone => zone === validation.value)
       // 清除input表格顯示
       this.searchInput = ""
       // TODO: 輸入字串有誤，待給予錯誤警告
@@ -161,10 +152,10 @@ export default {
         console.log('repeat: area')
       } else {
         // 輸入字串資料及格式正確，將api指定之資料格式(value)帶入zonesList及setZonesName向下傳至子元件
-        zonesList.push(validation.value)
-        this.setZonesName = zonesList
+        localStorageData.zonesName.push(validation.value)
+        this.setZonesName = localStorageData.zonesName
         // 將更新後的zonesList儲存至localStorage，使其保存最新的資料
-        localStorage.setItem('saveZonesList', JSON.stringify(zonesList))
+        localStorage.setItem('timezoneProject', JSON.stringify(localStorageData))
       }
     },
     fetchTableTabs(datetime) {
@@ -218,6 +209,17 @@ export default {
     }
   },
   created() {
+    const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
+    this.setZonesName = localStorageData ? localStorageData.zonesName : [
+        "Pacific/Niue",
+        "America/Belem",
+        "Asia/Tehran",
+        "Asia/Kathmandu",
+        "Asia/Taipei",
+        "Asia/Tokyo",
+        "Australia/Adelaide",
+        "Pacific/Nauru"
+      ]
     this.getApiLocationList()
   },
   watch: {
