@@ -34,7 +34,7 @@
             <li
               v-for="tab in tableTabs"
               :key="tab.id"
-              class="nav-item"
+              class="nav-item w-100"
               data-toggle="tooltip"
               :title="tab.ofWeek"
             >

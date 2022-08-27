@@ -37,12 +37,12 @@
                     <!-- 地區名 -->
                     {{ zone.city }}
                   </strong>
-                  <span class="text-black-50 text-12 ml-1">
+                  <span class="text-black-50 ml-1">
                     <!-- 時差縮寫 -->
                     {{ zone.abbreviation }}
                   </span>
                 </h3>
-                <p class="my-0 text-black-50 text-12">
+                <p class="my-0 text-black-50">
                   <!-- 國家/ TODO: 城市名 -->
                   {{ zone.country }}
                 </p>
@@ -60,15 +60,15 @@
                   <!-- default: 當地時間 -->
                   {{ zone.datetime | clockMode(isWholeDayMode) }}
                 </h3>
-                <p v-if="zone.clickDatetime" class="my-0 text-black-50 text-12">
+                <p v-if="zone.clickDatetime" class="my-0 text-black-50">
                   <!-- 當點擊目標時間時: 顯示所選日期 -->
                   {{ zone.clickDatetime }}
                 </p>
-                <p v-else-if ="targetDate" class="my-0 text-black-50 text-12">
+                <p v-else-if ="targetDate" class="my-0 text-black-50">
                   <!-- 當點擊目標日期時: 顯示主時區目標日期 -->
                   {{ zone.beginPoint | dateDetail }}
                 </p>
-                <p v-else class="my-0 text-black-50 text-12">
+                <p v-else class="my-0 text-black-50">
                   <!-- default: 當地日期 -->
                   {{ zone.datetime | dateDetail }}
                 </p>
@@ -78,7 +78,7 @@
         </transition-group>
       </draggable>
     </div>
-    <div class="right flex-column scroll position-relative">
+    <div class="right scroll flex-column position-relative">
       <div class="position-absolute w-100 h-100 background-wrapper">
         <ul class="d-flex m-0 h-100" v-if="targetDate.length === 0">
           <li
@@ -86,6 +86,7 @@
             :key="index"
             :class="[
               'w-100',
+              'min-w-hourPanel',
               {'bg-success': getHour(mainZoneData.datetime) === index - 1}
             ]"
           >
@@ -103,7 +104,6 @@
             position-relative
             my-0
             w-100
-            text-12
             list-height
             border-bottom
           "
@@ -113,6 +113,7 @@
             :key="index"
             class="
               w-100
+              min-w-hourPanel
               h-50
               d-flex
               flex-column
@@ -178,6 +179,7 @@
             @click.stop="hourClicked(hour)"
             :class="[
               'w-100',
+              'min-w-hourPanel',
               'hour-hover',
               {'hour-outside-clicked': hour.panelClicked},
               {'border border-dark': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
@@ -469,9 +471,6 @@ export default {
 .text-15 {
   font-size: 15px;
 }
-.text-12 {
-  font-size: 12px;
-}
 .line-normal {
   line-height: normal;
 }
@@ -482,11 +481,10 @@ export default {
   justify-content: center;
 }
 .weekdays-panel {
-  transform: translate(-20%, -110%);
+  transform: translate(-8%, -110%);
 }
-.scroll {
-  overflow-x: auto;
-  white-space: nowrap;
+.min-w-hourPanel {
+  min-width: 25px;
 }
 .background-wrapper {
   z-index: -50;

@@ -6,31 +6,56 @@
   color: #2c3e50;
 }
 
-// TODO: 待刪
-div, th, td {
-  // border: 1px solid black;
+html,
+body {
+  font-size: 14px;
 }
 
-table, tr {
+.app-wrapper {
+  max-width: 500px;
+  .left {
+    width: 100%;
+  }
+
+  .right {
+    display: none;
+  }
+}
+
+table, th, tr {
   width: 100%;
 }
 
-.left {
-  width: 35%;
-}
-
-.right {
-  margin-left: 2%;
-  width: calc(100% - 35% - 2%);
-  display: flex;
+.scroll {
+  overflow-y: hidden;
+  overflow-x: auto;
+  white-space: nowrap;
+  cursor: pointer;
+  &::-webkit-scrollbar-track {
+    background-color: #ffeeba;
+  }
+  //捲軸寬度
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  //捲軸本體顏色
+  &::-webkit-scrollbar-thumb {
+    background-color: #ffc107;
+  }
 }
 
 // IPAD mini 768px 寬度以下
-@media screen and (max-width: 750px) {
-  .left {
-    width: 100%
-  }
-  .right {
-    display: none
+@media screen and (min-width: 850px) {
+  .app-wrapper {
+    max-width: 1140px;
+    .left {
+      min-width: 350px;
+      width: 35%
+    }
+    .right {
+      margin-left: 2%;
+      width: calc(100% - 35% - 2%);
+      display: flex;
+    }
   }
 }
