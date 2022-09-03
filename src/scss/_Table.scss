@@ -1,0 +1,132 @@
+.list-height {
+  height: 5rem;
+}
+
+.text-16 {
+  font-size: 16px;
+}
+
+.line-normal {
+  line-height: normal;
+}
+
+.setting-wrapper {
+  transform: translateX(-100%);
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  opacity: 0.5;
+  &:hover {
+    cursor: pointer;
+    opacity: 0.9
+  }
+  i {
+    &::before {
+      padding: 1px;
+      border: 1px solid rgba(255, 255, 255, 0);
+    }
+    &:hover::before {
+      padding: 1px;
+      border: 1px solid rgb(128, 128, 128);
+    }
+  }
+}
+
+.left-panel-wrapper {
+  position: relative;
+  .dst-wrapper {
+    display: none;
+  }
+  .location-wrapper {
+    padding-left: 1rem;
+  }
+  .clockAndDate-wrapper {
+    position: absolute;
+    right: 1rem;
+  }
+}
+
+
+.abbreviation {
+  display: none;
+}
+
+.clickDate {
+  position: relative;
+  right: 0;
+  white-space: nowrap;
+}
+
+.right-panel-wrapper {
+  overflow-y: hidden;
+  overflow-x: auto;
+  white-space: nowrap;
+  cursor: pointer;
+  &::-webkit-scrollbar-track {
+    background-color: #ffeeba;
+  }
+  //捲軸寬度
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  //捲軸本體顏色
+  &::-webkit-scrollbar-thumb {
+    background-color: #ffc107;
+  }
+  // ===背景層===
+  .background-wrapper {
+    z-index: -50;
+    opacity: 0.1
+  }
+  // ===中間文字層===
+  .weekdays-panel {
+    transform: translate(-6%, -100%);
+  }
+  .hour-li {
+    width: 100%;
+    min-width: 25px;
+  }
+  // ===表面點擊層===
+  .hover-wrapper {
+    z-index: +50;
+    .hour-hover:hover {
+      border: 1px solid black
+    }
+    .hour-outside-clicked {
+      background-color: rgba(255, 255, 255, 0.8)
+    }
+  }
+}
+
+// draggable css
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+
+// width: 310px ← navbar 雙側貼齊顯示的設定值
+// 寬度310px以下，隱藏時區縮寫避免太擁擠
+// 寬度寬度310px以上，顯示時區縮寫
+@media screen and (min-width: 310px) {
+  .abbreviation {
+    display: inline-block;
+    border: 1px solid rgb(215, 215, 215);
+    border-radius: 3px;
+    padding: 1px 3px;
+    background-color: rgb(243, 243, 243);
+    color: rgb(128, 128, 128);
+    font-size: 9px;
+  }
+}
+
+@media screen and (min-width: 390px) {
+  .left-panel-wrapper {
+    .dst-wrapper {
+      display: block;
+      width: 13%;
+    }
+    .location-wrapper {
+      padding-left: unset;
+    }
+  }
+}

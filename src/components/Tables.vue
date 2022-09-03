@@ -15,7 +15,7 @@
             :key="zone.id"
             class="border-bottom d-flex list-height position-relative"
           >
-            <div class="setting d-flex position-absolute list-height">
+            <div class="setting-wrapper d-flex position-absolute list-height">
               <i class="fa-solid fa-circle-xmark fa-2xs my-2"
                 :class="{ 'd-none': zone.timezone === mainZone }"
                 @click="deleteTargetZone(zone.timezone)"
@@ -26,42 +26,40 @@
                 @click="changeMainZone(zone.timezone)"
               ></i>
             </div>
-            <div class="row mx-0 align-items-center w-100 list-height">
-              <div class="col-2">
+            <div class="left-panel-wrapper mx-0 d-flex align-items-center w-100 list-height">
+              <div class="dst-wrapper text-black-50 font-weight-bold">
                 <!-- 各區標準時差 -->
                 {{ getOffset(zone.datetime) / 60 | symbol }}
               </div>
-              <div class="col-4 text-left">
-                <h3 class="my-0 text-15">
-                  <strong>
-                    <!-- 地區名 -->
-                    {{ zone.city }}
-                  </strong>
-                  <span class="text-black-50 ml-1">
-                    <!-- 時差縮寫 -->
-                    {{ zone.abbreviation }}
-                  </span>
+              <div class="location-wrapper text-left">
+                <h3 class="d-inline my-0 text-nowrap text-16 font-weight-bold">
+                  <!-- 地區名 -->
+                  {{ zone.city }}
                 </h3>
+                <span class="abbreviation ml-1">
+                  <!-- 時差縮寫 -->
+                  {{ zone.abbreviation }}
+                </span>
                 <p class="my-0 text-black-50">
                   <!-- 國家/ TODO: 城市名 -->
                   {{ zone.country }}
                 </p>
               </div>
-              <div class="col-6 text-right">
-                <h3 v-if ="zone.clickClock" class="my-0 text-black-50 text-15">
+              <div class="clockAndDate-wrapper text-right">
+                <h3 v-if ="zone.clickClock" class="my-0 text-dark text-16 font-weight-bold">
                   <!-- 當點擊目標時間時: 顯示所選時間 -->
                   {{ zone.clickClock }}
                 </h3>
-                <h3 v-else-if="targetDate" class="my-0 text-black-50 text-15">
+                <h3 v-else-if="targetDate" class="my-0 text-dark text-16 font-weight-bold">
                   <!-- 當點擊目標日期時: 顯示主時區目標日期的00:00時間 -->
                   {{ zone.beginPoint | clockMode(isWholeDayMode) }}
                 </h3>
-                <h3 v-else class="my-0 text-black-50 text-15">
+                <h3 v-else class="my-0 text-dark text-16 font-weight-bold">
                   <!-- default: 當地時間 -->
                   {{ zone.datetime | clockMode(isWholeDayMode) }}
                 </h3>
-                <p v-if="zone.clickDatetime" class="my-0 text-black-50">
-                  <!-- 當點擊目標時間時: 顯示所選日期 -->
+                <p v-if="zone.clickDatetime" class="my-0 text-black-50 clickDate">
+                  <!-- 當點擊目標時間時: 顯示所選日期(可能換日) -->
                   {{ zone.clickDatetime }}
                 </p>
                 <p v-else-if ="targetDate" class="my-0 text-black-50">
@@ -78,15 +76,14 @@
         </transition-group>
       </draggable>
     </div>
-    <div class="right scroll flex-column position-relative">
+    <div class="right right-panel-wrapper flex-column position-relative">
       <div class="position-absolute w-100 h-100 background-wrapper">
         <ul class="d-flex m-0 h-100" v-if="targetDate.length === 0">
           <li
             v-for="index in 24"
             :key="index"
             :class="[
-              'w-100',
-              'min-w-hourPanel',
+              'hour-li',
               {'bg-success': getHour(mainZoneData.datetime) === index - 1}
             ]"
           >
@@ -112,8 +109,7 @@
             v-for="index in 24"
             :key="index"
             class="
-              w-100
-              min-w-hourPanel
+              hour-li
               h-50
               d-flex
               flex-column
@@ -178,8 +174,7 @@
             :key="hour.hourIndex"
             @click.stop="hourClicked(hour)"
             :class="[
-              'w-100',
-              'min-w-hourPanel',
+              'hour-li',
               'hour-hover',
               {'hour-outside-clicked': hour.panelClicked},
               {'border border-dark': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
@@ -463,45 +458,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.list-height {
-  height: 4rem;
-}
-.text-15 {
-  font-size: 15px;
-}
-.line-normal {
-  line-height: normal;
-}
-.setting {
-  transform: translateX(-100%);
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: center;
-}
-.weekdays-panel {
-  transform: translate(-8%, -110%);
-}
-.min-w-hourPanel {
-  min-width: 25px;
-}
-.background-wrapper {
-  z-index: -50;
-  opacity: 0.1
-}
-.hover-wrapper {
-  z-index: +50;
-  .hour-hover:hover {
-    border: 1px solid black
-  }
-  .hour-outside-clicked {
-    background-color: rgba(255, 255, 255, 0.8)
-  }
-}
-// draggable css
-.ghost {
-  opacity: 0.5;
-  background: #c8ebfb;
-}
-</style>

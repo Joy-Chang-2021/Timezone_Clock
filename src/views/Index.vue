@@ -238,12 +238,5 @@ export default {
 
 
 <style lang="scss" scoped>
-.nav {
-  transform: translate(4%, 13%);
-  border-bottom: unset;
-  flex-wrap: nowrap;
-  a {
-    color: black;
-  }
-}
+
 </style>
