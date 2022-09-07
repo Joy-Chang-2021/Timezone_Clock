@@ -16,6 +16,7 @@
               name="searchInput"
               list="searchList"
               placeholder="enter and select a place"
+              autocomplete="off"
               class="form-control"
             />
             <datalist id="searchList" v-if="!isLoading">

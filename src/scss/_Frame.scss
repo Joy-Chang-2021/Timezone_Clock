@@ -3,7 +3,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #{$font-main};
 }
 
 html,
@@ -17,7 +17,6 @@ body {
   .left {
     width: 100%;
   }
-
   .right {
     display: none;
   }
@@ -32,12 +31,11 @@ table, th, tr {
   .app-wrapper {
     max-width: 1140px;
     .left {
-      min-width: 350px;
-      width: 35%
+      width: 370px;
     }
     .right {
       margin-left: 2%;
-      width: calc(100% - 35% - 2%);
+      width: calc(100% - 370px - 2%);
       display: flex;
     }
   }

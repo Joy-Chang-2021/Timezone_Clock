@@ -1,6 +1,8 @@
 // init
 @import "/node_modules/reset-css/sass/reset";
-// other
+// basic
+@import "./Color";
 @import "./Frame";
+// files
 @import "./Index";
 @import "./Table"

@@ -10,51 +10,56 @@
   line-height: normal;
 }
 
-.setting-wrapper {
-  transform: translateX(-100%);
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: center;
-  opacity: 0.5;
+.left-panel-wrapper {
+  .setting-wrapper {
+    transform: translateX(-100%);
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    opacity: 0.5;
+    i {
+      &::before {
+        padding: 1px;
+        border: 1px solid #{$transparent};
+      }
+      &:hover::before {
+        opacity: 1;
+        padding: 1px;
+        border: 1px solid #{$font-secondary};
+      }
+    }
+  }
   &:hover {
     cursor: pointer;
-    opacity: 0.9
-  }
-  i {
-    &::before {
-      padding: 1px;
-      border: 1px solid rgba(255, 255, 255, 0);
-    }
-    &:hover::before {
-      padding: 1px;
-      border: 1px solid rgb(128, 128, 128);
+    .setting-wrapper {
+      cursor: pointer;
+      opacity: 0.9
     }
   }
-}
-
-.left-panel-wrapper {
-  position: relative;
   .dst-wrapper {
     display: none;
   }
   .location-wrapper {
     padding-left: 1rem;
+    .abbreviation {
+      display: none;
+    }
+    p {
+      color: #{$font-secondary}
+    }
   }
-  .clockAndDate-wrapper {
+  .time-wrapper {
     position: absolute;
     right: 1rem;
+    p {
+      color: #{$font-secondary}
+    }
+    .clickedDate {
+      position: relative;
+      right: 0;
+      white-space: nowrap;
+    }
   }
-}
-
-
-.abbreviation {
-  display: none;
-}
-
-.clickDate {
-  position: relative;
-  right: 0;
-  white-space: nowrap;
 }
 
 .right-panel-wrapper {
@@ -63,7 +68,7 @@
   white-space: nowrap;
   cursor: pointer;
   &::-webkit-scrollbar-track {
-    background-color: #ffeeba;
+    background-color: #{$table-background};
   }
   //捲軸寬度
   &::-webkit-scrollbar {
@@ -71,29 +76,61 @@
   }
   //捲軸本體顏色
   &::-webkit-scrollbar-thumb {
-    background-color: #ffc107;
+    background-color: #{$table-button};
   }
   // ===背景層===
   .background-wrapper {
     z-index: -50;
-    opacity: 0.1
   }
   // ===中間文字層===
   .weekdays-panel {
-    transform: translate(-6%, -100%);
+    transform: translate(-10%, -150%);
   }
   .hour-li {
     width: 100%;
-    min-width: 25px;
+    min-width: 29px;
+  }
+  .hour-today {
+    opacity: 0.8;
+    background-color: #{$table-background};
+  }
+  .hour-day {
+    border-top: 1px solid #{$hour-day-border};
+    border-bottom: 1px solid #{$hour-day-border};
+    background-color: #{$hour-day};
+  }
+  .hour-night {
+    border-top:1px solid #{$hour-night-border};
+    border-bottom: 1px solid #{$hour-night-border};
+    background-color: #{$hour-night};
+  }
+  .hour-begin {
+    margin-left: 1px;
+    border-left: 1px solid #{$hour-night-border};
+    border-radius: 5px 0 0 5px;
+  }
+  .hour-end {
+    margin-right: 1px;
+    border-right: 1px solid #{$hour-night-border};
+    border-radius: 0 5px 5px 0;
+  }
+  .hourText-forCenter {
+    position: relative;
+    top: 3px;
+  }
+  .subText {
+    position: relative;
+    right: 4px;
   }
   // ===表面點擊層===
   .hover-wrapper {
     z-index: +50;
     .hour-hover:hover {
-      border: 1px solid black
+      border: 1px solid #{$font-main}
     }
     .hour-outside-clicked {
-      background-color: rgba(255, 255, 255, 0.8)
+      opacity: 0.8;
+      background-color: #{$background}
     }
   }
 }
@@ -101,21 +138,25 @@
 // draggable css
 .ghost {
   opacity: 0.5;
-  background: #c8ebfb;
+  background: #{$header-background};
 }
 
 // width: 310px ← navbar 雙側貼齊顯示的設定值
 // 寬度310px以下，隱藏時區縮寫避免太擁擠
 // 寬度寬度310px以上，顯示時區縮寫
 @media screen and (min-width: 310px) {
-  .abbreviation {
-    display: inline-block;
-    border: 1px solid rgb(215, 215, 215);
-    border-radius: 3px;
-    padding: 1px 3px;
-    background-color: rgb(243, 243, 243);
-    color: rgb(128, 128, 128);
-    font-size: 9px;
+  .left-panel-wrapper {
+    .location-wrapper {
+      .abbreviation {
+        display: inline-block;
+        border: 1px solid #{$abbr-border};
+        border-radius: 3px;
+        padding: 1px 3px;
+        background-color: #{$abbr-background};
+        color: #{$abbr-main};
+        font-size: 9px;
+      }
+    }
   }
 }
 
@@ -123,7 +164,8 @@
   .left-panel-wrapper {
     .dst-wrapper {
       display: block;
-      width: 13%;
+      width: 15%;
+      color: #{$font-secondary}
     }
     .location-wrapper {
       padding-left: unset;
