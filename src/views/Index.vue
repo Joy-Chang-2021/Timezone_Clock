@@ -85,6 +85,7 @@ import Tables from "@/components/Tables.vue";
 import worldTimeAPI from "../utils/worldTimeAPI";
 import moment from "moment";
 import { dateFilter } from "../utils/moment";
+import { Toast } from "../utils/helpers";
 
 export default {
   name: "Index",
@@ -139,6 +140,7 @@ export default {
       this.setOrder = this.setOrder ? false : true
     },
     searchInputEntered() {
+      if (!this.searchInput) return
       // 確認輸入字串為指定之資料(限定fetchDatalist之中)
       const validation = this.fetchDatalist.find(item =>  item.name === this.searchInput)
       // 確認輸入地區與現存地區(localStorage或初始資料)清單有無重複
@@ -146,11 +148,17 @@ export default {
       const isRepeat = localStorageData.zonesName.some(zone => zone === validation.value)
       // 清除input表格顯示
       this.searchInput = ""
-      // TODO: 輸入字串有誤，待給予錯誤警告
-      if (!validation) {     
+      if (!validation) {
         console.log('alert: wrong input')
+        Toast.fire({
+          icon: 'warning',
+          title: '無此地區資料，請重新選取'
+        })
       } else if(isRepeat) {
-        console.log('repeat: area')
+        Toast.fire({
+          icon: 'warning',
+          title: `已有此地區時間`
+        })
       } else {
         // 輸入字串資料及格式正確，將api指定之資料格式(value)帶入zonesList及setZonesName向下傳至子元件
         localStorageData.zonesName.push(validation.value)
