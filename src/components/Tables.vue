@@ -189,7 +189,7 @@
               'hour-li',
               'hour-hover',
               {'hour-outside-clicked': hour.panelClicked},
-              {'border border-dark': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
+              {'border border-dark rounded': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
             ]"
           >
           &nbsp;

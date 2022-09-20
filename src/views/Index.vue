@@ -15,7 +15,7 @@
               v-model="searchInput"
               name="searchInput"
               list="searchList"
-              placeholder="enter and select a place"
+              placeholder="select a place and press Enter"
               autocomplete="off"
               class="form-control"
             />

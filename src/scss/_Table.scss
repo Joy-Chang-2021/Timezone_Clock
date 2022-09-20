@@ -10,6 +10,8 @@
   line-height: normal;
 }
 
+
+// 表格左側區域
 .left-panel-wrapper {
   .setting-wrapper {
     transform: translateX(-100%);
@@ -62,7 +64,9 @@
   }
 }
 
+// 表格右側區域
 .right-panel-wrapper {
+  // 卷軸設定
   overflow-y: hidden;
   overflow-x: auto;
   white-space: nowrap;
@@ -126,7 +130,8 @@
   .hover-wrapper {
     z-index: +50;
     .hour-hover:hover {
-      border: 1px solid #{$font-main}
+      border: 1px solid #{$font-main};
+      border-radius: 0.25rem;
     }
     .hour-outside-clicked {
       opacity: 0.8;
