@@ -55,7 +55,7 @@ input[type="search"] {
   }
 }
 
-@media screen and (min-width: 310px) {
+@media screen and (min-width: 390px) {
   // 寬度310px以下，navbar換行時置中顯示；
   // 寬度寬度310px以上，navbar無換行、雙側貼齊顯示
   nav.navbar {

@@ -3,7 +3,7 @@
     <nav class="navbar navbar-light mt-5 mb-4 rounded" style="background-color: #e3f2fd;">
       <a class="navbar-brand mr-0" href="#">
         <i class="fa-solid fa-clock fa-lg mr-1"></i>
-        <span class="m-0 font-weight-bolder">Timezone</span>
+        <span class="m-0 font-weight-bolder">Timezone Clcok</span>
       </a>
       <div>
         <button 
