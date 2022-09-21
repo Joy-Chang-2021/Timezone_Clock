@@ -271,11 +271,17 @@ export default {
           // 將取得資料存入zonesPanelData
           this.zonesPanelData = this.zonesPanelData.map(zone => {
             if (name !== zone.timezone) return zone
-            else return zone = {
-              ...zone,
-              abbreviation, datetime, dst,
-              city: name.split('/')[1],
-              country: name.split('/')[0]
+            else {
+              const country = name.split('/').length > 2 ? 
+                name.split('/')[0] + ' ' + name.split('/')[1] :
+                name.split('/')[0]
+              const city = name.split('/').length > 2 ?
+                name.split('/')[2].replaceAll('_', ' ') :
+                name.split('/')[1]
+              return zone = {
+                ...zone,
+                abbreviation, datetime, dst, city, country
+              }
             }
           })
           // 若api資料為主時區資料：
