@@ -1,5 +1,4 @@
 import moment from "moment"
-import "moment-timezone/builds/moment-timezone-with-data"
 // 不使用raw_offset，避免還要計算dst_offset的狀況
 
 export const clockFilter = {

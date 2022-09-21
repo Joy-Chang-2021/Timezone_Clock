@@ -30,6 +30,9 @@
         border: 1px solid #{$font-secondary};
       }
     }
+    .home {
+      display: none;
+    }
   }
   &:hover {
     cursor: pointer;
@@ -174,6 +177,16 @@
     }
     .location-wrapper {
       padding-left: unset;
+    }
+  }
+}
+
+@media screen and (min-width: 850px) {
+  .left-panel-wrapper {
+    .setting-wrapper {
+      .home {
+        display: inline-block;
+      }
     }
   }
 }

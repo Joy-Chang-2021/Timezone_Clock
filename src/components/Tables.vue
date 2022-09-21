@@ -21,7 +21,7 @@
                 @click="deleteTargetZone(zone.timezone)"
               ></i>
               <i
-                class="fa-solid fa-house fa-2xs my-2"
+                class="home fa-solid fa-house fa-2xs my-2"
                 :class="{ 'd-none': zone.timezone === mainZone }"
                 @click="changeMainZone(zone.timezone)"
               ></i>
