@@ -47,11 +47,11 @@ input[type="search"] {
 }
 
 #tableTabs {
-  transform: translate(4%, 13%);
   border-bottom: unset;
   flex-wrap: nowrap;
   a {
     color: #{$font-main};
+    line-height: 1.5rem;
   }
 }
 

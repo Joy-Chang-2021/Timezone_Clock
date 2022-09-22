@@ -1,36 +1,38 @@
 <template>
   <main>
-    <table>
-      <tr class="table-warning">
-        <th class="left">
-          <div class="input-group my-2 px-3">
-            <div class="input-group-prepend">
-              <button class="btn btn-warning" type="button" @click="changeOrder">
-                <i class="fa-solid fa-sort"></i>
-              </button>
-            </div>
-            <input
-              type="search"
-              @keyup.enter="searchInputEntered"
-              v-model="searchInput"
-              name="searchInput"
-              list="searchList"
-              placeholder="select a place and press Enter"
-              autocomplete="off"
-              class="form-control"
-            />
-            <datalist id="searchList" v-if="!isLoading">
-              <option v-for="item in fetchDatalist" :key="item.id" :data-value="item.value">
-                {{ item.name }}
-              </option>
-            </datalist>
+    <div class="table-warning d-flex">
+      <div class="left">
+        <div class="input-group my-2 px-3">
+          <div class="input-group-prepend">
+            <button class="btn btn-warning" type="button" @click="changeOrder">
+              <i class="fa-solid fa-sort"></i>
+            </button>
           </div>
-        </th>
-        <th class="right">
+          <input
+            type="search"
+            @keyup.enter="searchInputEntered"
+            v-model="searchInput"
+            name="searchInput"
+            list="searchList"
+            placeholder="select a place and press Enter"
+            autocomplete="off"
+            class="form-control"
+          />
+          <datalist id="searchList" v-if="!isLoading">
+            <option v-for="item in fetchDatalist" :key="item.id" :data-value="item.value">
+              {{ item.name }}
+            </option>
+          </datalist>
+        </div>
+      </div>
+      <div class="right">
+        <div class="my-2 mr-3">
           <button type="button" class="btn btn-warning calendar-wrapper">
             <input type="date" id="calendar" v-model="calendarInput">
             <i class="fa-regular fa-calendar fa-xl"></i>
           </button>
+        </div>
+        <div class="d-flex align-items-end">
           <ul class="nav nav-tabs" id="tableTabs">
             <li
               v-for="tab in tableTabs"
@@ -65,9 +67,9 @@
               </a>
             </li>
           </ul>
-        </th>
-      </tr>
-    </table>
+        </div>
+      </div>
+    </div>
     <Tables
       :isWholeDayMode="isWholeDayMode"
       :setZonesName="setZonesName"
@@ -220,14 +222,8 @@ export default {
   created() {
     const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
     this.setZonesName = localStorageData ? localStorageData.zonesName : [
-        "Pacific/Niue",
-        "America/Belem",
-        "Asia/Tehran",
-        "Asia/Kathmandu",
         "Asia/Taipei",
         "Asia/Tokyo",
-        "Australia/Adelaide",
-        "Pacific/Nauru"
       ]
     this.getApiLocationList()
   },

@@ -13,6 +13,7 @@ cd dist
 # echo 'www.example.com' > CNAME
 
 git init
+git branch -M main
 git add -A
 git commit -m 'deploy'
 
@@ -23,3 +24,5 @@ git commit -m 'deploy'
 git push -f https://github.com/Joy-Chang-2021/Timezone_Clock.git main:gh-pages
 
 cd -
+
+# 終端機於根目錄位置輸入./deploy.sh
