@@ -1,201 +1,206 @@
 <template>
-  <div class="d-flex" v-if="!this.isLoading">
-    <div class="left">
-      <draggable
-        class="list-group"
-        tag="ul"
-        v-model="zonesPanelData"
-        v-bind="dragOptions"
-        @start="drag = true"
-        @end="drag = false"
-      >
-        <transition-group type="transition">
-          <li
-            v-for="zone in zonesPanelData"
-            :key="zone.id"
-            class="left-panel-wrapper border-bottom d-flex list-height position-relative"
-          >
-            <div class="setting-wrapper d-flex position-absolute list-height">
-              <i class="fa-solid fa-circle-xmark fa-2xs my-2"
-                :class="{ 'd-none': zone.timezone === mainZone }"
-                @click="deleteTargetZone(zone.timezone)"
-              ></i>
-              <i
-                class="home fa-solid fa-house fa-2xs my-2"
-                :class="{ 'd-none': zone.timezone === mainZone }"
-                @click="changeMainZone(zone.timezone)"
-              ></i>
-            </div>
-            <div class="mx-0 d-flex align-items-center w-100 list-height position-relative">
-              <div class="dst-wrapper font-weight-bold">
-                <!-- 各區標準時差 -->
-                {{ getOffset(zone.datetime) / 60 | symbol }}
-              </div>
-              <div class="location-wrapper text-left">
-                <h3 class="d-inline my-0 text-nowrap text-16 font-weight-bold">
-                  <!-- 地區名 -->
-                  {{ zone.city }}
-                </h3>
-                <span class="abbreviation ml-1">
-                  <!-- 時差縮寫 -->
-                  {{ zone.abbreviation }}
-                </span>
-                <p class="my-0">
-                  <!-- 國家/ TODO: 城市名 -->
-                  {{ zone.country }}
-                </p>
-              </div>
-              <div class="time-wrapper text-right">
-                <h3 v-if ="zone.clickClock" class="my-0 text-16 font-weight-bold">
-                  <!-- 當點擊目標時間時: 顯示所選時間 -->
-                  {{ zone.clickClock }}
-                </h3>
-                <h3 v-else-if="targetDate" class="my-0 text-16 font-weight-bold">
-                  <!-- 當點擊目標日期時: 顯示主時區目標日期的00:00時間 -->
-                  {{ zone.beginPoint | clockMode(isWholeDayMode) }}
-                </h3>
-                <h3 v-else class="my-0 text-16 font-weight-bold">
-                  <!-- default: 當地時間 -->
-                  {{ zone.datetime | clockMode(isWholeDayMode) }}
-                </h3>
-                <p v-if="zone.clickDatetime" class="my-0 clickedDate">
-                  <!-- 當點擊目標時間時: 顯示所選日期(可能換日) -->
-                  {{ zone.clickDatetime }}
-                </p>
-                <p v-else-if ="targetDate" class="my-0">
-                  <!-- 當點擊目標日期時: 顯示主時區目標日期 -->
-                  {{ zone.beginPoint | dateDetail }}
-                </p>
-                <p v-else class="my-0">
-                  <!-- default: 當地日期 -->
-                  {{ zone.datetime | dateDetail }}
-                </p>
-              </div>
-            </div>
-          </li>
-        </transition-group>
-      </draggable>
-    </div>
-    <div class="right right-panel-wrapper flex-column position-relative">
-      <div class="background-wrapper position-absolute w-100 h-100 py-4">
-        <ul class="d-flex m-0 h-100" v-if="targetDate.length === 0">
-          <li
-            v-for="index in 24"
-            :key="index"
-            :class="[
-              'hour-li',
-              {'hour-today': getHour(mainZoneData.datetime) === index - 1}
-            ]"
-          >
-          &nbsp;
-          </li>
-        </ul>
-      </div>
-      <div>
-        <ul
-          v-for="zone in zonesPanelData"
-          :key="zone.timezone"
-          class="
-            d-flex
-            align-items-center
-            position-relative
-            my-0
-            w-100
-            list-height
-            border-bottom
-          "
+  <div>
+    <div class="d-flex" v-if="!this.isLoading">
+      <div class="left">
+        <draggable
+          class="list-group"
+          tag="ul"
+          v-model="zonesPanelData"
+          v-bind="dragOptions"
+          @start="drag = true"
+          @end="drag = false"
         >
-          <li
-            v-for="index in 24"
-            :key="index"
-            class="
-              hour-li
-              h-50
-              d-flex
-              flex-column
-            "
-          >
-            <div 
-              class="h-100 d-flex flex-column justify-content-center"
+          <transition-group type="transition">
+            <li
+              v-for="zone in zonesPanelData"
+              :key="zone.id"
+              class="left-panel-wrapper border-bottom d-flex list-height position-relative"
+            >
+              <div class="setting-wrapper d-flex position-absolute list-height">
+                <i class="fa-solid fa-circle-xmark fa-2xs my-2"
+                  :class="{ 'd-none': zone.timezone === mainZone }"
+                  @click="deleteTargetZone(zone.timezone)"
+                ></i>
+                <i
+                  class="home fa-solid fa-house fa-2xs my-2"
+                  :class="{ 'd-none': zone.timezone === mainZone }"
+                  @click="changeMainZone(zone.timezone)"
+                ></i>
+              </div>
+              <div class="mx-0 d-flex align-items-center w-100 list-height position-relative">
+                <div class="dst-wrapper font-weight-bold">
+                  <!-- 各區標準時差 -->
+                  {{ getOffset(zone.datetime) / 60 | symbol }}
+                </div>
+                <div class="location-wrapper text-left">
+                  <h3 class="d-inline my-0 text-nowrap text-16 font-weight-bold">
+                    <!-- 地區名 -->
+                    {{ zone.city }}
+                  </h3>
+                  <span class="abbreviation ml-1">
+                    <!-- 時差縮寫 -->
+                    {{ zone.abbreviation }}
+                  </span>
+                  <p class="my-0">
+                    <!-- 國家/ TODO: 城市名 -->
+                    {{ zone.country }}
+                  </p>
+                </div>
+                <div class="time-wrapper text-right">
+                  <h3 v-if ="zone.clickClock" class="my-0 text-16 font-weight-bold">
+                    <!-- 當點擊目標時間時: 顯示所選時間 -->
+                    {{ zone.clickClock }}
+                  </h3>
+                  <h3 v-else-if="targetDate" class="my-0 text-16 font-weight-bold">
+                    <!-- 當點擊目標日期時: 顯示主時區目標日期的00:00時間 -->
+                    {{ zone.beginPoint | clockMode(isWholeDayMode) }}
+                  </h3>
+                  <h3 v-else class="my-0 text-16 font-weight-bold">
+                    <!-- default: 當地時間 -->
+                    {{ zone.datetime | clockMode(isWholeDayMode) }}
+                  </h3>
+                  <p v-if="zone.clickDatetime" class="my-0 clickedDate">
+                    <!-- 當點擊目標時間時: 顯示所選日期(可能換日) -->
+                    {{ zone.clickDatetime }}
+                  </p>
+                  <p v-else-if ="targetDate" class="my-0">
+                    <!-- 當點擊目標日期時: 顯示主時區目標日期 -->
+                    {{ zone.beginPoint | dateDetail }}
+                  </p>
+                  <p v-else class="my-0">
+                    <!-- default: 當地日期 -->
+                    {{ zone.datetime | dateDetail }}
+                  </p>
+                </div>
+              </div>
+            </li>
+          </transition-group>
+        </draggable>
+      </div>
+      <div class="right right-panel-wrapper flex-column position-relative">
+        <div class="background-wrapper position-absolute w-100 h-100 py-4">
+          <ul class="d-flex m-0 h-100" v-if="targetDate.length === 0">
+            <li
+              v-for="index in 24"
+              :key="index"
               :class="[
-              (getHour(zone.beginPoint) + index - 1) % 24 < 7 ||
-              (getHour(zone.beginPoint) + index - 1) % 24 >= 19 ?
-              'hour-night' : 'hour-day',
-              {'hour-begin': (getHour(zone.beginPoint) + index - 1) % 24 === 0},
-              {'hour-end': (getHour(zone.beginPoint) + index - 1) % 24 === 23}
+                'hour-li',
+                {'hour-today': getHour(mainZoneData.datetime) === index - 1}
               ]"
             >
-              <!-- 00點: 顯示日期 -->
-              <template v-if="getHour(zone.beginPoint) + index - 1 === 0">
-                <p class="my-0 line-normal position-absolute weekdays-panel">
-                  {{ zone.beginPoint | weeks }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ zone.beginPoint | month }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ zone.beginPoint | day }}
-                </p>
-              </template>
-              <!-- 24點: 顯示換日日期 -->
-              <template v-else-if="getHour(zone.beginPoint) + index - 1 === 24">
-                <p class="my-0 line-normal position-absolute weekdays-panel">
-                  {{ zone.nextDate | weeks }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ zone.nextDate | month }}
-                </p>
-                <p class="my-0 line-normal">
-                  {{ zone.nextDate | day }}
-                </p>
-              </template>
-              <!-- 非00點: 顯示24hrs -->
-              <template v-else-if="isWholeDayMode">
-                <p class="my-0 line-normal" :class="{'hourText-forCenter': getOffset(zone.beginPoint) % 60}">
-                  {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(24) }}
-                </p>
-                <sub v-show ="getOffset(zone.beginPoint) % 60" class="my-0 line-normal">
-                  {{ getOffset(zone.beginPoint) % 60 }}
-                </sub>
-              </template>
-              <!-- 非00點: 顯示12am/pm -->
-              <template v-else>
-                <p class="my-0 line-normal hourText-forCenter">
-                  <span>
-                    {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(12) }}
-                  </span>
-                  <sub
-                    v-show ="getOffset(zone.beginPoint) % 60"
-                    class="subText"
-                  >
+            &nbsp;
+            </li>
+          </ul>
+        </div>
+        <div>
+          <ul
+            v-for="zone in zonesPanelData"
+            :key="zone.timezone"
+            class="
+              d-flex
+              align-items-center
+              position-relative
+              my-0
+              w-100
+              list-height
+              border-bottom
+            "
+          >
+            <li
+              v-for="index in 24"
+              :key="index"
+              class="
+                hour-li
+                h-50
+                d-flex
+                flex-column
+              "
+            >
+              <div 
+                class="h-100 d-flex flex-column justify-content-center"
+                :class="[
+                (getHour(zone.beginPoint) + index - 1) % 24 < 7 ||
+                (getHour(zone.beginPoint) + index - 1) % 24 >= 19 ?
+                'hour-night' : 'hour-day',
+                {'hour-begin': (getHour(zone.beginPoint) + index - 1) % 24 === 0},
+                {'hour-end': (getHour(zone.beginPoint) + index - 1) % 24 === 23}
+                ]"
+              >
+                <!-- 00點: 顯示日期 -->
+                <template v-if="getHour(zone.beginPoint) + index - 1 === 0">
+                  <p class="my-0 line-normal position-absolute weekdays-panel">
+                    {{ zone.beginPoint | weeks }}
+                  </p>
+                  <p class="my-0 line-normal">
+                    {{ zone.beginPoint | month }}
+                  </p>
+                  <p class="my-0 line-normal">
+                    {{ zone.beginPoint | day }}
+                  </p>
+                </template>
+                <!-- 24點: 顯示換日日期 -->
+                <template v-else-if="getHour(zone.beginPoint) + index - 1 === 24">
+                  <p class="my-0 line-normal position-absolute weekdays-panel">
+                    {{ zone.nextDate | weeks }}
+                  </p>
+                  <p class="my-0 line-normal">
+                    {{ zone.nextDate | month }}
+                  </p>
+                  <p class="my-0 line-normal">
+                    {{ zone.nextDate | day }}
+                  </p>
+                </template>
+                <!-- 非00點: 顯示24hrs -->
+                <template v-else-if="isWholeDayMode">
+                  <p class="my-0 line-normal" :class="{'hourText-forCenter': getOffset(zone.beginPoint) % 60}">
+                    {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(24) }}
+                  </p>
+                  <sub v-show ="getOffset(zone.beginPoint) % 60" class="my-0 line-normal">
                     {{ getOffset(zone.beginPoint) % 60 }}
                   </sub>
-                </p>               
-                <sub class="my-0 line-normal">
-                  {{ getHour(zone.beginPoint) + index - 1 | hourStatus }}
-                </sub>
-              </template>
-            </div>
-          </li>
-        </ul>
+                </template>
+                <!-- 非00點: 顯示12am/pm -->
+                <template v-else>
+                  <p class="my-0 line-normal hourText-forCenter">
+                    <span>
+                      {{ getHour(zone.beginPoint) + index - 1 | hourPanelMode(12) }}
+                    </span>
+                    <sub
+                      v-show ="getOffset(zone.beginPoint) % 60"
+                      class="subText"
+                    >
+                      {{ getOffset(zone.beginPoint) % 60 }}
+                    </sub>
+                  </p>               
+                  <sub class="my-0 line-normal">
+                    {{ getHour(zone.beginPoint) + index - 1 | hourStatus }}
+                  </sub>
+                </template>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="position-absolute w-100 h-100 hover-wrapper">
+          <ul class="d-flex m-0 h-100">
+            <li
+              v-for="hour in hourClickedPanel"
+              :key="hour.hourIndex"
+              @click.stop="hourClicked(hour)"
+              :class="[
+                'hour-li',
+                'hour-hover',
+                {'hour-outside-clicked': hour.panelClicked},
+                {'border border-dark rounded': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
+              ]"
+            >
+            &nbsp;
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="position-absolute w-100 h-100 hover-wrapper">
-        <ul class="d-flex m-0 h-100">
-          <li
-            v-for="hour in hourClickedPanel"
-            :key="hour.hourIndex"
-            @click.stop="hourClicked(hour)"
-            :class="[
-              'hour-li',
-              'hour-hover',
-              {'hour-outside-clicked': hour.panelClicked},
-              {'border border-dark rounded': !hour.panelClicked && hourClickedPanel.some(hour => hour.panelClicked)}
-            ]"
-          >
-          &nbsp;
-          </li>
-        </ul>
-      </div>
+    </div>
+    <div v-else class="spinner-border text-secondary mt-4" role="status">
+      <span class="sr-only">Loading...</span>
     </div>
   </div>
 </template>
