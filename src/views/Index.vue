@@ -119,6 +119,7 @@ export default {
   methods: {
     async getApiLocationList() {
       try {
+        console.time("world Data");
         this.isLoading = true
         const { data, status } = await worldTimeAPI.validAreaList();
         if(status !== 200) throw new Error()
@@ -127,6 +128,7 @@ export default {
           this.apiAreaList.includes(item.split('/')[0])
         )
         this.isLoading = false
+        console.timeEnd("world Data")
       } catch (error) {
         console.log("error: ", error);
       }

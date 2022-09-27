@@ -265,8 +265,50 @@ export default {
         }
       })
     },
-    async getZonesData(nameList) {
+    async getZonesData(mainZone, nameList) {
       try {
+        console.time("moment swap method")
+        this.isLoading = true
+        // 取得主要時區API資料
+        const { data, status } = await worldTimeAPI.localTimeAPI(mainZone)
+        if (status != 200) throw new Error()
+        const { abbreviation, datetime } = data
+        // 主要時區資料: 存入data、呼叫函式(設定面板渲染資料、上傳至父元件tabs渲染資料)
+        this.mainZoneData = { abbreviation, datetime, timezone: mainZone }
+        this.setHoursPanelData(datetime)
+        this.emitMainZoneData(this.mainZoneData)
+        // 所有時區資料轉換
+        for (const name of nameList) {
+          const convertTime = moment.parseZone(datetime).tz(name).format()
+          const convertAbbr = moment.tz(name).zoneAbbr()
+          this.zonesPanelData = this.zonesPanelData.map(zone => {
+            if (name !== zone.timezone) return zone
+            else {
+              const country = name.split('/').length > 2 ? 
+                name.split('/')[0] + ' ' + name.split('/')[1] :
+                name.split('/')[0]
+              const city = name.split('/').length > 2 ?
+                name.split('/')[2].replaceAll('_', ' ') :
+                name.split('/')[1]
+              return zone = {
+                ...zone,
+                abbreviation: convertAbbr,
+                datetime: convertTime,
+                city, country
+              }
+            }
+          })
+        }
+        this.isLoading = false
+        console.timeEnd("moment swap method")
+      } catch (error) {
+        console.log("error", error);
+      }
+    },
+    // TODO: delete
+    async getZonesDataOLD(nameList) {
+      try {
+        console.time("All API Data");
         this.isLoading = true
         // 將指定陣列的資料迴圈向api取得指定地區資料
         for (const name of nameList) {
@@ -300,6 +342,7 @@ export default {
           }
         }
         this.isLoading = false
+        console.timeEnd("All API Data")
       } catch (error) {
         console.log("error", error);
       }
@@ -327,7 +370,7 @@ export default {
     },
     changeMainZone(zoneName) {
       this.mainZone = zoneName
-      this.getZonesData(this.setZonesName)
+      this.getZonesData(this.mainZone, this.setZonesName)
     },
     deleteTargetZone(zoneName) {
       // 修改子元件中儲存的資料(並不重新向api取得資料)
@@ -439,7 +482,9 @@ export default {
     const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
     this.mainZone = localStorageData ? localStorageData.mainZone : "Asia/Taipei"
     // 動態資料from API
-    this.getZonesData(this.setZonesName)
+    this.getZonesData(this.mainZone, this.setZonesName)
+    // TODO: test
+    this.getZonesDataOLD(this.setZonesName)
     this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {
@@ -456,7 +501,7 @@ export default {
       // 設定靜態資料
       this.setZonesInitialData(value); 
       // 動態資料from API
-      this.getZonesData(value)
+      this.getZonesData(this.mainZone, value)
     },
     zonesPanelData(value) {
       // 過濾掉create階段的變化
