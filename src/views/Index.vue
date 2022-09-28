@@ -81,6 +81,7 @@
 </template>
 
 <script>
+import entireZonesList from '../assets/entireZonesList.json';
 import $ from 'jquery'
 import { v4 as uuidv4 } from 'uuid';
 import Tables from "@/components/Tables.vue";
@@ -104,6 +105,7 @@ export default {
   data() {
     return {
       isLoading: false,
+      entireZonesList: entireZonesList,
       setZonesName: [],
       mainZoneData: {},
       tableTabs: [],
@@ -117,6 +119,7 @@ export default {
     };
   },
   methods: {
+    // TODO: delete
     async getApiLocationList() {
       try {
         console.time("world Data");
@@ -132,6 +135,14 @@ export default {
       } catch (error) {
         console.log("error: ", error);
       }
+    },
+    fetchAllZonesList() {
+      console.time("zonesList from JSON")
+      this.entireZonesList = this.entireZonesList.filter(item =>
+        // 保留包含apiAreaList地區的資料
+        this.apiAreaList.includes(item.split('/')[0])
+      )
+      console.timeEnd("zonesList from JSON")
     },
     dayChange(datetime, number) {
       // 修改日期: 加減天數
@@ -212,7 +223,7 @@ export default {
   },
   computed: {
     fetchDatalist() {
-      return this.apiLocationList.map(item => {
+      return this.entireZonesList.map(item => {
         return {
           id: uuidv4(),
           value: item, // 用於api資料格式
@@ -227,7 +238,9 @@ export default {
         "Asia/Taipei",
         "Asia/Tokyo",
       ]
-    this.getApiLocationList()
+    this.fetchAllZonesList()
+    // TODO: delete
+    // this.getApiLocationList()
   },
   watch: {
     mainZoneData(newValue, oldValue) {

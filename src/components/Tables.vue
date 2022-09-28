@@ -483,8 +483,8 @@ export default {
     this.mainZone = localStorageData ? localStorageData.mainZone : "Asia/Taipei"
     // 動態資料from API
     this.getZonesData(this.mainZone, this.setZonesName)
-    // TODO: test
-    this.getZonesDataOLD(this.setZonesName)
+    // TODO: delete
+    // this.getZonesDataOLD(this.setZonesName)
     this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {
