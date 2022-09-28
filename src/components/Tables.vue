@@ -34,7 +34,7 @@
                 </div>
                 <div class="location-wrapper text-left">
                   <h3 class="d-inline my-0 text-nowrap text-16 font-weight-bold">
-                    <!-- 地區名 -->
+                    <!-- 城市名 -->
                     {{ zone.city }}
                   </h3>
                   <span class="abbreviation ml-1">
@@ -42,7 +42,7 @@
                     {{ zone.abbreviation }}
                   </span>
                   <p class="my-0">
-                    <!-- 國家/ TODO: 城市名 -->
+                    <!-- 國家/地區名 -->
                     {{ zone.country }}
                   </p>
                 </div>
@@ -267,7 +267,6 @@ export default {
     },
     async getZonesData(mainZone, nameList) {
       try {
-        console.time("moment swap method")
         this.isLoading = true
         // 取得主要時區API資料
         const { data, status } = await worldTimeAPI.localTimeAPI(mainZone)
@@ -288,61 +287,18 @@ export default {
                 name.split('/')[0] + ' ' + name.split('/')[1] :
                 name.split('/')[0]
               const city = name.split('/').length > 2 ?
-                name.split('/')[2].replaceAll('_', ' ') :
-                name.split('/')[1]
+                name.split('/')[2] : name.split('/')[1]
               return zone = {
                 ...zone,
                 abbreviation: convertAbbr,
                 datetime: convertTime,
-                city, country
+                city: city.replaceAll('_', ' '),
+                country
               }
             }
           })
         }
         this.isLoading = false
-        console.timeEnd("moment swap method")
-      } catch (error) {
-        console.log("error", error);
-      }
-    },
-    // TODO: delete
-    async getZonesDataOLD(nameList) {
-      try {
-        console.time("All API Data");
-        this.isLoading = true
-        // 將指定陣列的資料迴圈向api取得指定地區資料
-        for (const name of nameList) {
-          const { data, status } = await worldTimeAPI.localTimeAPI(name)
-          if (status != 200) throw new Error()
-          const { abbreviation, datetime, dst } = data
-          // 將取得資料存入zonesPanelData
-          this.zonesPanelData = this.zonesPanelData.map(zone => {
-            if (name !== zone.timezone) return zone
-            else {
-              const country = name.split('/').length > 2 ? 
-                name.split('/')[0] + ' ' + name.split('/')[1] :
-                name.split('/')[0]
-              const city = name.split('/').length > 2 ?
-                name.split('/')[2].replaceAll('_', ' ') :
-                name.split('/')[1]
-              return zone = {
-                ...zone,
-                abbreviation, datetime, dst, city, country
-              }
-            }
-          })
-          // 若api資料為主時區資料：
-          if (name === this.mainZone) {
-            this.mainZoneData = {
-              abbreviation, datetime, dst, timezone: this.mainZone
-            }
-            // 代入函式：計算個各時區時差資料、上傳至父元件渲染當週tabs
-            this.setHoursPanelData(datetime)
-            this.emitMainZoneData(this.mainZoneData)
-          }
-        }
-        this.isLoading = false
-        console.timeEnd("All API Data")
       } catch (error) {
         console.log("error", error);
       }
@@ -483,8 +439,6 @@ export default {
     this.mainZone = localStorageData ? localStorageData.mainZone : "Asia/Taipei"
     // 動態資料from API
     this.getZonesData(this.mainZone, this.setZonesName)
-    // TODO: delete
-    // this.getZonesDataOLD(this.setZonesName)
     this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {

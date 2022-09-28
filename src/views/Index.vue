@@ -85,7 +85,6 @@ import entireZonesList from '../assets/entireZonesList.json';
 import $ from 'jquery'
 import { v4 as uuidv4 } from 'uuid';
 import Tables from "@/components/Tables.vue";
-import worldTimeAPI from "../utils/worldTimeAPI";
 import moment from "moment";
 import { dateFilter } from "../utils/moment";
 import { Toast } from "../utils/helpers";
@@ -115,34 +114,14 @@ export default {
       searchInput: '',
       setTargetLocation: '',
       apiAreaList: ['Africa', 'America', 'Antarctica', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific'],
-      apiLocationList: [],
     };
   },
   methods: {
-    // TODO: delete
-    async getApiLocationList() {
-      try {
-        console.time("world Data");
-        this.isLoading = true
-        const { data, status } = await worldTimeAPI.validAreaList();
-        if(status !== 200) throw new Error()
-        this.apiLocationList = data.filter(item =>
-          // 保留包含apiAreaList地區的資料
-          this.apiAreaList.includes(item.split('/')[0])
-        )
-        this.isLoading = false
-        console.timeEnd("world Data")
-      } catch (error) {
-        console.log("error: ", error);
-      }
-    },
     fetchAllZonesList() {
-      console.time("zonesList from JSON")
       this.entireZonesList = this.entireZonesList.filter(item =>
         // 保留包含apiAreaList地區的資料
         this.apiAreaList.includes(item.split('/')[0])
       )
-      console.timeEnd("zonesList from JSON")
     },
     dayChange(datetime, number) {
       // 修改日期: 加減天數
@@ -164,7 +143,6 @@ export default {
       // 清除input表格顯示
       this.searchInput = ""
       if (!validation) {
-        console.log('alert: wrong input')
         Toast.fire({
           icon: 'warning',
           title: '無此地區資料，請重新選取'
@@ -239,8 +217,6 @@ export default {
         "Asia/Tokyo",
       ]
     this.fetchAllZonesList()
-    // TODO: delete
-    // this.getApiLocationList()
   },
   watch: {
     mainZoneData(newValue, oldValue) {
