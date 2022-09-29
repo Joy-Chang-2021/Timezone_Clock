@@ -5,14 +5,14 @@
         <draggable
           class="list-group"
           tag="ul"
-          v-model="zonesPanelData"
+          v-model="allZonesData"
           v-bind="dragOptions"
           @start="drag = true"
           @end="drag = false"
         >
           <transition-group type="transition">
             <li
-              v-for="zone in zonesPanelData"
+              v-for="zone in allZonesData"
               :key="zone.id"
               class="left-panel-wrapper border-bottom d-flex list-height position-relative"
             >
@@ -94,7 +94,7 @@
         </div>
         <div>
           <ul
-            v-for="zone in zonesPanelData"
+            v-for="zone in allZonesData"
             :key="zone.timezone"
             class="
               d-flex
@@ -245,70 +245,84 @@ export default {
       isLoading: false,
       mainZone: "",
       mainZoneData: {},
-      targetDate: "",
-      zonesName: [],
-      zonesPanelData: [],
+      allZonesData: [],
       hourClickedPanel: [],
+      targetDate: "",
+      // zonesData僅用於allZonesData順序或時區清單改變時，儲存修改後的資料並傳至localStorage
+      zonesName: [],
       drag: false,
     };
   },
   methods: {
     setZonesInitialData(nameList) {
-      // 父層與API無關之靜態資料
-      nameList.forEach((zone, index) => {
-        // 所有時區之靜態資料，分別用於v-for渲染、點擊0-24時間點的面板渲染
-        this.zonesPanelData[index] = {
+      // 父層與API無關之靜態資料：分別用於v-for渲染、點擊0-24時間點的面板渲染
+      nameList.forEach((name, index) => {
+        // 時區縮寫：可由moment-timezone套件取得
+        const abbreviation = moment.tz(name).zoneAbbr()
+        // 城市名、國家地區名：由namelist清單內各自的名稱切割而成
+        const country = name.split('/').length > 2 ? 
+          name.split('/')[0] + ' ' + name.split('/')[1] :
+          name.split('/')[0]
+        const city = name.split('/').length > 2 ?
+          name.split('/')[2] : name.split('/')[1]
+        // 建立所有時區之初始靜待資料：
+        this.allZonesData[index] = {
           id: uuidv4(),
-          timezone: zone,
+          timezone: name,
+          abbreviation,
+          country,
+          city: city.replaceAll('_', ' '),
           clickClock: '',
           clickDatetime: ''
         }
       })
     },
-    async getZonesData(mainZone, nameList) {
+    async getZoneApiData(mainZone) {
       try {
         this.isLoading = true
+        console.time('whole api function')
+        console.time('api duration')
         // 取得主要時區API資料
         const { data, status } = await worldTimeAPI.localTimeAPI(mainZone)
         if (status != 200) throw new Error()
         const { abbreviation, datetime } = data
+        console.timeEnd('api duration')
         // 主要時區資料: 存入data、呼叫函式(設定面板渲染資料、上傳至父元件tabs渲染資料)
         this.mainZoneData = { abbreviation, datetime, timezone: mainZone }
+        // 表格左側資料：根據主時區時間，轉換其他時區的當地時間
+        this.setClockPanelData(this.setZonesName)
         this.setHoursPanelData(datetime)
         this.emitMainZoneData(this.mainZoneData)
-        // 所有時區資料轉換
-        for (const name of nameList) {
-          const convertTime = moment.parseZone(datetime).tz(name).format()
-          const convertAbbr = moment.tz(name).zoneAbbr()
-          this.zonesPanelData = this.zonesPanelData.map(zone => {
-            if (name !== zone.timezone) return zone
-            else {
-              const country = name.split('/').length > 2 ? 
-                name.split('/')[0] + ' ' + name.split('/')[1] :
-                name.split('/')[0]
-              const city = name.split('/').length > 2 ?
-                name.split('/')[2] : name.split('/')[1]
-              return zone = {
-                ...zone,
-                abbreviation: convertAbbr,
-                datetime: convertTime,
-                city: city.replaceAll('_', ' '),
-                country
-              }
-            }
-          })
-        }
+        console.timeEnd('whole api function')
         this.isLoading = false
       } catch (error) {
+        this.isLoading = false
         console.log("error", error);
       }
     },
+    setClockPanelData(nameList) {
+      // 用於表格左側的渲染資料
+      // 將主時區的時間傳換成其他時區的當地時間
+      console.log('setClockPanelData start')
+      const rawDatetime = this.mainZoneData.datetime
+      for (const name of nameList) {
+        const datetime = moment.parseZone(rawDatetime).tz(name).format()
+        this.allZonesData = this.allZonesData.map(zone => {
+          if (name !== zone.timezone) return zone
+          else return zone = {
+            ...zone,
+            datetime,
+          }
+        })
+      }
+    },
     setHoursPanelData(datetime) {
+      // 用於表格右側的渲染資料
       // 根據代入參數(指定之日期時間)，增加各時區資料中的beginPoint、nextDate資料，用以渲染畫面
       const targetDate = moment.parseZone(datetime).format('YYYY-MM-DD')
       const mainZoneMidnight = moment.tz(targetDate, this.mainZone).format()
       // 迴圈所有時區beginPoint、nextDate資料
-      this.zonesPanelData = this.zonesPanelData.map(zone => {
+      this.allZonesData = this.allZonesData.map(zone => {
         // 將參數時區00:00轉換為當地時區的「第一格」時間點
         const beginPoint = moment(mainZoneMidnight).tz(zone.timezone).format()
         // 每個時區須換日時的資料，主要須月份/日期/星期資料
@@ -326,23 +340,25 @@ export default {
     },
     changeMainZone(zoneName) {
       this.mainZone = zoneName
-      this.getZonesData(this.mainZone, this.setZonesName)
+      this.getZoneApiData(this.mainZone)
     },
     deleteTargetZone(zoneName) {
       // 修改子元件中儲存的資料(並不重新向api取得資料)
-      this.zonesPanelData = this.zonesPanelData.filter(zone => zone.timezone !== zoneName)
+      this.allZonesData = this.allZonesData.filter(zone => zone.timezone !== zoneName)
     },
     arrangeOrder(boolean) {
-      if (boolean) this.zonesPanelData.sort((a, b) => {
+      // 根據時區的GMT-12至GMT+12順序，轉換時區的升冪或降冪排序
+      if (boolean) this.allZonesData.sort((a, b) => {
         // 「升序」排序
         return this.getOffset(a.datetime) - this.getOffset(b.datetime)
       })
-      else this.zonesPanelData.sort((a, b) => {
+      else this.allZonesData.sort((a, b) => {
         // 「降序」排序
         return this.getOffset(b.datetime) - this.getOffset(a.datetime)
       })
     },
     saveToLocalStorage() {
+      // 儲存主時區名稱、所有時區的名稱/順序至localStorage
       const rawData = {
         mainZone: this.mainZone,
         zonesName: this.zonesName
@@ -373,7 +389,7 @@ export default {
       // 取出點擊時間之index
       const index = target.hourIndex
       // 迴圈計算各時區之點擊時間
-      this.zonesPanelData.map(zone => {
+      this.allZonesData.map(zone => {
         // ==== 計算之資料 ====
         // 各時區的「被點擊的那一格」時間點
         let localHour = moment.parseZone(zone.beginPoint).hour() + index
@@ -403,7 +419,7 @@ export default {
     hourUnClick() {
       // 關閉hour點擊區：取消遮色樣式(panelClicked: false)、移除點擊之時間資料
       this.hourClickedPanel.forEach(hour => hour.panelClicked = false)
-      this.zonesPanelData.forEach(zone => {
+      this.allZonesData.forEach(zone => {
         zone.clickClock = ""
         zone.clickDatetime =""
       })
@@ -433,12 +449,12 @@ export default {
     },
   },
   created() {
-    // 設定靜態資料 (1) zonesPanelData相關 (2) mainZone相關
+    // 設定靜態資料 (1) allZonesData相關 (2) mainZone相關
     this.setZonesInitialData(this.setZonesName);
     const localStorageData = JSON.parse(localStorage.getItem('timezoneProject'))
     this.mainZone = localStorageData ? localStorageData.mainZone : "Asia/Taipei"
     // 動態資料from API
-    this.getZonesData(this.mainZone, this.setZonesName)
+    this.getZoneApiData(this.mainZone)
     this.hourClickDefault() //生成24小時面板點擊區
   },
   mounted() {
@@ -455,18 +471,21 @@ export default {
       // 設定靜態資料
       this.setZonesInitialData(value); 
       // 動態資料from API
-      this.getZonesData(this.mainZone, value)
+      // this.getZoneApiData(this.mainZone, value)
+      this.setClockPanelData(value)
+      this.setHoursPanelData(this.mainZone.datetime)
     },
-    zonesPanelData(value) {
+    allZonesData(value) {
       // 過濾掉create階段的變化
       if (this.isLoading) return
-      // 當zonesPanelData資料改變(ex順序拖曳)：存入zonesName並呼叫函式將資料存入localStorage
       else {
+        // 當allZonesData資料改變(ex順序拖曳)：存入zonesName並呼叫函式將資料存入localStorage
         this.zonesName = value.map(zone => zone.timezone)
         this.saveToLocalStorage()
       }
     },
     setOrder(value) {
+      // 父元件的排序按鈕啟動，呼叫根據時區升降冪排序的函式
       this.arrangeOrder(value)
     },
     setTargetDate(value) {
