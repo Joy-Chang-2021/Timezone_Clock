@@ -208,6 +208,7 @@
 <script>
 import worldTimeAPI from "../utils/worldTimeAPI";
 import { v4 as uuidv4 } from 'uuid';
+import { Toast } from "../utils/helpers";
 import draggable from "vuedraggable";
 import moment from "moment";
 import "moment-timezone/builds/moment-timezone-with-data";
@@ -280,30 +281,29 @@ export default {
     async getZoneApiData(mainZone) {
       try {
         this.isLoading = true
-        console.time('whole api function')
-        console.time('api duration')
         // 取得主要時區API資料
         const { data, status } = await worldTimeAPI.localTimeAPI(mainZone)
-        if (status != 200) throw new Error()
+        if (status !== 200) throw new Error()
         const { abbreviation, datetime } = data
-        console.timeEnd('api duration')
         // 主要時區資料: 存入data、呼叫函式(設定面板渲染資料、上傳至父元件tabs渲染資料)
         this.mainZoneData = { abbreviation, datetime, timezone: mainZone }
         // 表格左側資料：根據主時區時間，轉換其他時區的當地時間
         this.setClockPanelData(this.setZonesName)
         this.setHoursPanelData(datetime)
         this.emitMainZoneData(this.mainZoneData)
-        console.timeEnd('whole api function')
         this.isLoading = false
       } catch (error) {
         this.isLoading = false
         console.log("error", error);
+        Toast.fire({
+          icon: 'warning',
+          title: '無法取得資料，請稍後再試'
+        })
       }
     },
     setClockPanelData(nameList) {
       // 用於表格左側的渲染資料
       // 將主時區的時間傳換成其他時區的當地時間
-      console.log('setClockPanelData start')
       const rawDatetime = this.mainZoneData.datetime
       for (const name of nameList) {
         const datetime = moment.parseZone(rawDatetime).tz(name).format()
